@@ -78,6 +78,8 @@ test('suggestions are feasible, use only allowed crops, and can be explained', (
     const text = explain(a, cur.ev, ctx);
     assert.ok(text.why.length && text.evidence.length >= 5 && text.headline.length && text.risks.length && text.gaps.length);
     assert.ok(!JSON.stringify(text).match(/NaN|undefined/), JSON.stringify(text));
+    assert.ok(text.benefits.length + text.tradeoffs.length > 0 && text.worst.length === a.rot.crops.length);
+    assert.ok(text.worst.every((w) => w.seasons.length === 3 && /mm of rain/.test(w.seasons[0])));
   }
   assert.ok(!JSON.stringify(explain({ rot: base, ev: cur.ev }, cur.ev, ctx)).match(/NaN|undefined/));
 });
@@ -141,6 +143,16 @@ test('every numeric crop field carries a source and a confidence', () => {
       assert.ok(c[k] && c[k].source in raw.sources && c[k].confidence, `${id}.${k}`);
     }
   }
+});
+
+test('confidence badge follows the documented rules', async () => {
+  const { confidence } = await import('../js/explain.js');
+  const ctx = ctxFor(toMonthly(fakePower(20), 45));
+  const sourced = evaluate(base, ctx), assumed = evaluate({ crops: ['wheat', 'chickpea'], cover: false }, ctx);
+  assert.equal(confidence(sourced, 45).level, 'Medium');
+  assert.equal(confidence(assumed, 45).level, 'Low');   // chickpea stage lengths are an assumption
+  assert.equal(confidence(sourced, 30.9).level, 'Low'); // outside the temperate calendar's latitudes
+  assert.equal(confidence(evaluate(base, ctxFor(toMonthly(fakePower(12), 45))), 45).level, 'Low'); // too few seasons
 });
 
 if (process.env.POWER_JSON) {

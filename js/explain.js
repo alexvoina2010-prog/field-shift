@@ -25,7 +25,7 @@ export function title(c) {
   if (!c.kind) return { title: 'Your current rotation', lead: 'The baseline. Every alternative is measured against it.' };
   if (c.kind === 'cover') return { title: 'Keep the crops, add cover crops', lead: `Same crops. A cover mix (for example vetch + oats) is sown in every gap of ${COVER_MIN_GAP} months or more.` };
   if (c.kind === 'swap') return { title: `Swap ${name(c.old)} for ${name(c.id)}`, lead: `Year ${c.at + 1}: ${name(c.id)} instead of ${name(c.old)}. Everything else stays.` };
-  return { title: `Add a ${name(c.id)} year`, lead: `The rotation grows from ${c.rot.crops.length - 1} to ${c.rot.crops.length} years.` };
+  return { title: `Add ${/^[AEIOU]/.test(name(c.id)) ? 'an' : 'a'} ${name(c.id)} year`, lead: `The rotation grows from ${c.rot.crops.length - 1} to ${c.rot.crops.length} years.` };
 }
 
 const gapText = (g, shift) => `${monthName(g.months[0].abs % 12, shift)}–${monthName(g.months.at(-1).abs % 12, shift)}`;
@@ -71,8 +71,54 @@ function evidence(ev, cur) {
     { text: `Crop seasons with frost in the month after sowing (frost-sensitive crops): ${ch(count(f, 'frost'), b && count(b, 'frost'))}`, ...SRC_CLIMATE },
     { text: `Heavy-rain days (${HEAVY_RAIN_MM} mm or more) that fall on bare soil: ${ch(pct(f.bareShare), b && pct(b.bareShare))}%`, ...SRC_CLIMATE },
     { text: `Bare soil, months per year: ${ch(one(f.bare / f.n), b && one(b.bare / b.n))}. Legume years: ${ch(f.legumeYears, b && b.legumeYears)} of ${f.n}`, ...SRC_TRAITS },
+    { text: `Soil organic matter (qualitative, not measured): ${organicMatter(f, b)}`, source: 'Rule of thumb from months of bare soil and cover crops (assumption)', conf: 'low' },
     { text: `Plant families: ${ch(f.families, b && b.families)}. Crops returning too soon: ${late(f)}`, ...SRC_TRAITS },
   ];
+}
+
+// Qualitative only: less bare soil and more cover means more roots and residue feeding the soil.
+function organicMatter(f, b) {
+  const bare = f.bare / f.n;
+  if (!b) return bare <= 2 ? 'likely holding or building, the soil is rarely bare' : bare <= 4 ? 'uncertain' : `at risk of declining, the soil is bare ${one(bare)} months a year`;
+  const d = bare - b.bare / b.n;
+  return d <= -0.5 ? 'likely better than now, less bare soil' : d >= 0.5 ? 'likely worse than now, more bare soil' : 'about the same as now';
+}
+
+const tag = (c, k) => (c.src[k].source === 'assumption' ? 'assumption' : c.src[k].source.replace('FAO56-T', 'FAO-56 Table '));
+
+// For each crop in the rotation: its three worst flowering seasons with the weather NASA recorded,
+// and the parameters the backtest used with where each came from.
+function worst(ev, shift) {
+  return ev.rot.crops.map((id, i) => {
+    const c = CROPS[id], months = c.flower.map((m) => monthName(m - 1, shift));
+    return {
+      crop: c.name,
+      window: months.length > 1 ? `${months[0]}–${months.at(-1)}` : months[0],
+      seasons: [...ev.facts.crops[i].list].sort((a, b) => a.ks - b.ks).slice(0, 3).map((s) =>
+        `${s.year}: ${Math.round(s.rain)} mm of rain, average daily high ${one(s.tmax)} °C, short of water on ${s.stress} of ${s.days} days`),
+      used: `Crop coefficients ${c.kc.join(' / ')} (${tag(c, 'kc')}); stage lengths (${tag(c, 'stages')}); roots ${c.root} m and depletion fraction ${c.p} (${tag(c, 'root')}); ` +
+        `flowering months (${tag(c, 'flower')}); heat limit ${c.heatTmax} °C (${tag(c, 'heatTmax')}).`,
+    };
+  });
+}
+
+// CONFIDENCE RULES (also listed under "Data and method" on the page)
+// Low:    a water-balance parameter (crop coefficient, stage lengths, rooting depth, depletion
+//         fraction) of any crop is an assumption; or the field lies outside 35-60 degrees latitude,
+//         where the temperate crop calendar does not apply; or a crop has fewer than 15 replayed seasons.
+// Medium: all water-balance parameters are FAO-56 table values. Flowering months and heat limits
+//         are still assumptions and rainfall comes from one source.
+// High:   not reachable yet. Needs sourced flowering months and heat limits, and a second rainfall
+//         source agreeing within 20%.
+const WATER_PARAMS = ['kc', 'stages', 'root', 'p'];
+export function confidence(ev, lat) {
+  const reasons = [];
+  const weak = [...new Set(ev.rot.crops)].filter((id) => WATER_PARAMS.some((k) => CROPS[id].src[k].source === 'assumption'));
+  if (weak.length) reasons.push(`${weak.map(name).join(', ')}: growth-stage lengths are an assumption, not an FAO-56 table value.`);
+  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) reasons.push('This field is outside the temperate latitudes (35°–60°) the crop calendar was written for.');
+  if (ev.facts.crops.some((c) => c.n < 15)) reasons.push('Fewer than 15 replayed seasons for at least one crop.');
+  if (reasons.length) return { level: 'Low', reasons };
+  return { level: 'Medium', reasons: ['Water-balance parameters are FAO-56 table values, but flowering months and heat limits are assumptions and rainfall comes from one source.'] };
 }
 
 // Rain in the first two months of the longest covered gap: average and driest-third value.
@@ -104,8 +150,9 @@ function risks(c, ctx) {
   return [...new Set(out)];
 }
 
-function gaps(c) {
-  const out = [];
+function gaps(c, ctx) {
+  const out = ['Income is not estimated: yields, prices, contracts, machinery and labour are not modelled.'];
+  if (ctx.irrigated) out.push('Irrigation is not modelled. The water counts show what rain alone would have done, and are left out of the total score.');
   if (c.id) out.push(`No local yield, price or contract data for ${name(c.id)}.`);
   if (c.ev.facts.coveredGaps) out.push('Cover crop species, sowing date and termination are not modelled.');
   out.push('Flowering months, heat limits and sowing dates are assumptions for temperate Europe, not your varieties.');
@@ -120,11 +167,14 @@ export function explain(c, cur, ctx) {
   return {
     ...title(c),
     headline: headline(c.ev),
-    why: c.kind ? why(c, cur, ctx.mo.shift) : [],
+    why: c.kind ? why(c, cur, ctx.mo.shift) : ['This is what you grow now. It is replayed on the same weather so every alternative has something to be measured against.'],
     evidence: evidence(c.ev, cur),
-    benefits: c.kind ? moved(1) : [],
+    worst: worst(c.ev, ctx.mo.shift),
+    // Baseline: its strongest scores. Alternatives: what moves against the baseline.
+    benefits: c.kind ? moved(1) : METRICS.filter((k) => c.ev.scores[k] >= 0.75).map((k) => `${LABELS[k]}: ${pct(c.ev.scores[k])} of 100`),
     tradeoffs: c.kind ? moved(-1) : [],
-    gaps: gaps(c),
+    gaps: gaps(c, ctx),
     risks: risks(c, ctx),
+    confidence: confidence(c.ev, ctx.lat),
   };
 }

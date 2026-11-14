@@ -23,7 +23,7 @@ node --test
 1. **Your field.** Click the map or type coordinates; choose soil type and slope. Optional NASA map layers: vegetation (NDVI), root-zone soil moisture, latest rainfall.
 2. **What the last 26 years say.** Three headline facts, each tested for a trend (Mann-Kendall, Sen's slope) and only called a trend when the test agrees; a climate ribbon with one square per month since 2000 (water shortfall, very hot days, frost or heavy rain) under the current rotation's crop calendar; and a monthly chart of rain against crop water demand.
 3. **Your rotation and priorities.** Current crops by year, which crops you could actually grow and sell, five priority sliders, and a what-if for drier or warmer weather.
-4. **Compare your options.** The current rotation plus one alternative per size of change: add cover crops, swap one crop, add a year.
+4. **Compare your options.** The current rotation plus one alternative per size of change: add cover crops, swap one crop, add a year. Every card has the same five headings (why suggested, evidence, benefits, information gaps, risks needing local review), the three worst flowering seasons per crop with the rain and temperature NASA recorded, and a confidence badge with documented rules. Constraints: irrigated field, livestock or hay buyer, and the list of crops you can grow.
 
 ## Data
 

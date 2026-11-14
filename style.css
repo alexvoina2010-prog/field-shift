@@ -26,6 +26,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.15; margin: 0; text-wrap: balance; }
@@ -163,6 +164,17 @@ details summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
 .conf { font-weight: 700; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; list-style: none; }
 .chips li { margin: 0; padding: 2px 9px; border-radius: 99px; font-size: 0.82rem; font-weight: 600; border: 1px solid currentColor; }
+.badge { float: right; font-size: 0.75rem; font-weight: 700; padding: 2px 9px; border-radius: 99px; border: 1px solid currentColor; color: var(--ink-2); }
+.badge.low { color: var(--bad); }
+.card .worst { margin: 12px 0 2px; font-size: 0.9rem; }
+.card .none { margin: 4px 0; font-size: 0.86rem; color: var(--ink-2); }
+/* phone: finger-sized controls and readable calendar labels */
+button, select, input[type=number], input[type=month] { min-height: 44px; }
+input[type=range] { min-height: 32px; }
+.check, .checks label, .layers label { min-height: 32px; }
+details summary { padding: 8px 0; }
+.cal-months { font-size: 0.7rem; }
+.seg { font-size: 0.78rem; }
 .warn { background: #fbe9c8; border: 1px solid #e3b860; border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; }
 
 footer { margin: 40px auto 60px; color: var(--ink-2); font-size: 0.9rem; }

@@ -20,6 +20,8 @@ saved in `data/demo_field.json`.
 | Winter wheat holds up better | Short of water in **10 of 25** seasons | Same rule, May–June |
 | The model finds the known drought years | Maize's worst Julys: 2007 (9 mm of rain, mean daily maximum 35.6 °C), 2000 (12 mm, 34.0 °C), 2024 (29 mm, 36.1 °C), 2012 (17 mm, 36.2 °C) | Lowest mean Ks in July; rain and temperature are the recorded POWER values for that month |
 | …and the good years | July 2005 (140 mm) and July 2010 (115 mm): zero stress days for maize | Same run |
+| Wheat's worst seasons | May–June 2002 (62 mm of rain), 2001 (76 mm), 2007 (63 mm): short of water on 53–60 of 61 days | "Worst years" drill-down on the baseline card |
+| Confidence is earned, not assumed | Swapping in chickpea drops the badge from Medium to Low, because its growth-stage lengths are not in the FAO-56 table | Confidence rules in `js/explain.js`, listed on the page under "Data and method" |
 | Same crop, different continent | Maize near Ames, Iowa (42.0 N, 93.6 W): short of water at flowering in **1 of 26** seasons | Same model, live POWER data, loam |
 
 ## Wording rules

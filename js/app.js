@@ -135,7 +135,7 @@ function renderClimate() {
   const notes = [`NASA POWER grid cell around ${lat.toFixed(2)}°, ${lon.toFixed(2)}° (about 50 km wide, ${Math.round(elev)} m above sea level). ` +
     `Rain averages ${Math.round(s.annualRain)} mm a year; a well-watered crop could use ${Math.round(s.annualEt0)} mm. ` +
     `The three boxes test ${y[0]}–${y.at(-1)} for a trend: what happened, not a forecast.`];
-  if (Math.abs(lat) < 23.5) notes.push('⚠ This point is in the tropics. The crop calendar here is built for temperate seasons, so treat the rotation results as illustrative only.');
+  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) notes.push('⚠ This point is outside the temperate latitudes (35°–60°) the crop calendar was written for. Sowing and flowering months may not match local practice, so treat the rotation results as illustrative only.');
   $('climate-note').textContent = notes.join(' ');
   $('tiles').innerHTML = [
     fact(`Days of ${HOT_DAY} °C or more, per year`, s.series.hotDays, ' days', 1),
@@ -166,8 +166,8 @@ function renderRotation() {
 }
 
 function buildControls() {
-  $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}"${c.forage ? "" : " checked"}> ${esc(c.name)}</label>`).join('');
-  $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])}
+  $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${esc(c.name)}</label>`).join('');
+  $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])} <output id="wo-${k}"></output>
     <span class="src">${esc(WEIGHT_HINTS[k])}</span>
     <input type="range" id="w-${k}" min="0" max="5" step="1" value="3"></label>`).join('');
   const now = new Date(), year = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
@@ -209,19 +209,26 @@ function card(c, cur, ctx, best) {
     return `<div class="metric"><span>${esc(LABELS[k])}</span><span class="track"><i style="width:${v}%"></i></span><span class="n">${v}${ch}</span></div>`;
   }).join('');
   const chips = (items, cls) => (items.length ? `<ul class="chips">${items.map((x) => `<li class="${cls}">${esc(x)}</li>`).join('')}</ul>` : '');
+  const evidenceItem = (e) => `<li>${esc(e.text)}<span class="src">${esc(e.source)} · confidence: <span class="conf">${esc(e.conf)}</span></span></li>`;
+  const { level, reasons } = t.confidence;
   return `<article class="card${c.kind ? '' : ' current'}${best ? ' best' : ''}">
     <span class="tag">${c.kind ? (best ? 'Best fit for your priorities' : KIND_TAG[c.kind]) : 'Baseline'}</span>
+    <span class="badge ${level.toLowerCase()}">Confidence: ${level}</span>
     <h3>${esc(t.title)}</h3><p class="lead">${esc(t.lead)}</p>
     <h4>Replayed on ${ctx.mo.years[0]}–${ctx.mo.years.at(-1)} weather</h4>${list(t.headline)}
     <div class="total"><b>${score}</b><span>/ 100</span>${delta}</div>
     ${calendar(c.ev, ctx.mo.shift)}${metrics}
-    ${t.why.length ? `<h4>Why it is suggested</h4>${list(t.why)}` : ''}
-    ${t.benefits.length || t.tradeoffs.length ? `<h4>Gains and trade-offs</h4>${chips(t.benefits, 'up')}${chips(t.tradeoffs, 'down')}` : ''}
-    <h4>Check locally before acting</h4>${list([...t.risks, 'Prices, contracts, machinery and labour are not modelled.'])}
-    <details><summary>Evidence and information gaps</summary>
-      <h4>Evidence</h4><ul>${t.evidence.map((e) => `<li>${esc(e.text)}<span class="src">${esc(e.source)} · confidence: <span class="conf">${esc(e.conf)}</span></span></li>`).join('')}</ul>
-      <h4>Information gaps</h4>${list(t.gaps)}
-    </details></article>`;
+    <h4>Why suggested</h4>${list(t.why)}
+    <h4>Evidence</h4><ul>${t.evidence.slice(0, 3).map(evidenceItem).join('')}</ul>
+    <details><summary>Worst years and the numbers used</summary>
+      ${t.worst.map((w) => `<p class="worst"><b>${esc(w.crop)}</b>: three worst flowering seasons (${esc(w.window)})</p>${list(w.seasons)}<p class="src">${esc(w.used)}</p>`).join('')}
+      <p class="worst"><b>Other evidence</b></p><ul>${t.evidence.slice(3).map(evidenceItem).join('')}</ul>
+    </details>
+    <h4>Benefits</h4>${chips(t.benefits, 'up') || '<p class="none">None stands out for these priorities.</p>'}
+    ${t.tradeoffs.length ? `<p class="none">Trade-offs</p>${chips(t.tradeoffs, 'down')}` : ''}
+    <h4>Information gaps</h4>${list([`Confidence is ${level.toLowerCase()}. ${reasons.join(' ')}`, ...t.gaps])}
+    <h4>Risks needing local review</h4>${list(t.risks.length ? t.risks : ['The replay flags no specific risk. Still review any change with a local agronomist.'])}
+    </article>`;
 }
 
 function renderStrategies() {
@@ -242,9 +249,16 @@ function renderStrategies() {
   }
   const { p, lat, elev } = state.power;
   const mo = rainPct || dT ? toMonthly(p, lat, { rain: 1 + rainPct / 100, dT }, elev) : state.base;
-  const ctx = { mo, clim: summarize(mo).clim, soil: $('soil').value, slope: $('slope').value };
-  const weights = Object.fromEntries(METRICS.map((k) => [k, +$(`w-${k}`).value]));
-  const allowed = [...document.querySelectorAll('#allowed input:checked')].map((i) => i.value).filter((id) => id in CROPS);
+  const irrigated = $('irrigated').checked;
+  const ctx = { mo, clim: summarize(mo).clim, soil: $('soil').value, slope: $('slope').value, lat, irrigated };
+  // Constraints: an irrigated field takes the rain-only water count out of the total; forage crops
+  // are only offered when there is livestock or a hay buyer. Sliders only re-weight computed scores.
+  $('w-water').disabled = irrigated;
+  const weights = Object.fromEntries(METRICS.map((k) => [k, k === 'water' && irrigated ? 0 : +$(`w-${k}`).value]));
+  const weightSum = METRICS.reduce((s, k) => s + weights[k], 0);
+  for (const k of METRICS) $(`wo-${k}`).textContent = k === 'water' && irrigated ? 'not counted (irrigated)' : weightSum ? `${Math.round((100 * weights[k]) / weightSum)}% of the score` : '0%';
+  const allowed = [...document.querySelectorAll('#allowed input:checked')].map((i) => i.value)
+    .filter((id) => id in CROPS && ($('livestock').checked || !CROPS[id].forage));
   const { cur, alts } = suggest(current, allowed, ctx, weights);
   const top = alts.reduce((m, a) => (a.total > m.total ? a : m), cur);
   $('cards').innerHTML = [{ rot: current, ev: cur.ev, total: cur.total }, ...alts].map((c) => card(c, cur, ctx, c === top && c.kind)).join('') +
@@ -288,7 +302,7 @@ $('add-year').addEventListener('click', () => {
   state.crops = [...state.crops, 'wheat'];
   renderRotation(); renderStrategies();
 });
-for (const id of ['setup', 'soil', 'slope']) $(id).addEventListener('input', (e) => { if (!e.target.closest('#rotation')) renderStrategies(); });
+for (const id of ['setup', 'soil', 'slope', 'irrigated']) $(id).addEventListener('input', (e) => { if (!e.target.closest('#rotation')) renderStrategies(); });
 
 buildControls();
 loadField();

@@ -58,6 +58,7 @@
             <option value="steep">Steep slope</option>
           </select>
         </label>
+        <label class="check"><input type="checkbox" id="irrigated"> This field is irrigated</label>
         <button type="submit" class="primary">Analyse this field</button>
         <p id="status" class="hint" role="status" aria-live="polite"></p>
       </form>
@@ -110,13 +111,14 @@
         <div id="rotation"></div>
         <button type="button" id="add-year">+ Add a year</button>
         <label class="check"><input type="checkbox" id="cover"> I already sow cover crops in long gaps</label>
-        <h3>Crops you could grow and sell</h3>
-        <p class="hint">Untick crops you have no market, machinery or interest for. They will not be suggested.</p>
+        <h3>Crops you can grow, harvest and sell</h3>
+        <p class="hint">Untick crops you lack the machinery, market or interest for. They will not be offered.</p>
         <div id="allowed" class="checks"></div>
+        <label class="check"><input type="checkbox" id="livestock"> I have livestock or a hay buyer (otherwise forage crops such as alfalfa are left out)</label>
       </div>
       <div class="panel">
         <h3>Your priorities</h3>
-        <p class="hint">Slide right for "matters a lot".</p>
+        <p class="hint">Slide right for "matters a lot". The sliders only change how much each score counts in the total; they never change the scores themselves.</p>
         <div id="weights"></div>
       </div>
       <div class="panel">
@@ -134,7 +136,7 @@
 
   <section aria-labelledby="h-compare" id="compare" hidden>
     <h2 id="h-compare"><span class="step">4</span> Compare your options</h2>
-    <p class="hint">Each option is replayed on the weather NASA recorded for this field. Scores run from 0 to 100: the share of seasons that would have stayed out of trouble, weighted by your priorities. They compare options; they are not yield predictions.</p>
+    <p class="hint">Each option is replayed on the weather NASA recorded for this field. Scores run from 0 to 100: the share of seasons that would have stayed out of trouble, weighted by your priorities. They compare options; they are not yield predictions. This tool supports, it does not replace, your judgment.</p>
     <ul class="legend" aria-label="Calendar legend">
       <li><span class="sw crop"></span>Crop</li>
       <li><span class="sw legume"></span>Legume crop</li>
@@ -149,7 +151,7 @@
       <ul>
         <li><strong>Your field itself.</strong> Climate comes from a NASA grid cell about 50 km wide. Hollows, frost pockets and local storms are averaged away, and model data can run hotter or drier than a nearby weather station.</li>
         <li><strong>Your soil.</strong> Only the soil type and slope you picked are used. A soil test (organic matter, pH, compaction) would change the picture.</li>
-        <li><strong>Irrigation.</strong> Everything assumes a rain-fed field.</li>
+        <li><strong>Irrigation.</strong> The replay is rain-fed. If you tick "irrigated", the water count is shown but left out of the total.</li>
         <li><strong>Money.</strong> No prices, contracts, subsidies, machinery or labour costs.</li>
         <li><strong>Pests, diseases and weeds actually present.</strong> Only general rules on how often a crop should return.</li>
         <li><strong>Local crop calendars and varieties.</strong> Sowing and harvest months are typical temperate values.</li>
@@ -167,6 +169,8 @@
       <li><strong>Map layers:</strong> NASA GIBS: MODIS Terra NDVI (monthly), SMAP Level-4 root-zone soil moisture, GPM IMERG precipitation rate.</li>
       <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
       <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>
+      <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35°–60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
+      <li><strong>Soil organic matter</strong> is a qualitative note from months of bare soil and cover crops, not a measurement or a score.</li>
       <li><strong>Trends:</strong> Mann-Kendall test with Sen's slope on one value per year. A trend is called "clear" only when p is below 0.05, and "possible" between 0.05 and 0.1.</li>
       <li><strong>Heavy-rain days:</strong> days with 10 mm or more (the standard R10mm index).</li>
       <li><strong>Crop table:</strong> <code>data/crops.json</code>. Crop coefficients, stage lengths, rooting depths and depletion fractions are FAO-56 table values. Sowing and flowering months, heat limits and return intervals are assumptions with low confidence, and are labelled as such. A "heat hit" is 5 or more days above the crop's limit while flowering.</li>
