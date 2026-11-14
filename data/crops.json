@@ -1,0 +1,149 @@
+{
+  "_about": "Crop parameters for the rotation backtest. Every numeric field is {value, source, confidence}. source is a key of `sources`. Anything with source \"assumption\" is a rule of thumb with no citation and is labelled as such in the UI. Calendar months are 1-12, typical for temperate South-East Europe.",
+  "sources": {
+    "FAO56-T11": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 11: lengths of crop development stages",
+    "FAO56-T12": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 12: single crop coefficients Kc",
+    "FAO56-T22": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 22: rooting depth and depletion fraction p",
+    "assumption": "Assumption: agronomy rule of thumb, no citation attached. Check locally."
+  },
+  "crops": {
+    "wheat": {
+      "name": "Winter wheat", "family": "Poaceae", "winter": true, "waterNeed": "medium",
+      "sow": { "value": 10, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 7, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.4, 1.15, 0.3], "source": "FAO56-T12", "confidence": "medium", "note": "ini: frozen-soil row; end: range 0.25-0.4" },
+      "stages": { "value": [160, 75, 75, 25], "source": "FAO56-T11", "confidence": "medium", "note": "October planting row, scaled to the calendar above" },
+      "root": { "value": 1.65, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.5-1.8 m" },
+      "p": { "value": 0.55, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [5, 6], "source": "assumption", "confidence": "low", "note": "flowering and grain fill" },
+      "heatTmax": { "value": 32, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "risk": "Grain fill in early summer is the heat-sensitive stage; sowing needs autumn moisture."
+    },
+    "barley": {
+      "name": "Winter barley", "family": "Poaceae", "winter": true, "waterNeed": "medium",
+      "sow": { "value": 10, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 6, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.3, 1.15, 0.25], "source": "FAO56-T12", "confidence": "medium", "note": "ini: cereals group value" },
+      "stages": { "value": [160, 75, 75, 25], "source": "assumption", "confidence": "low", "note": "winter wheat row of FAO-56 Table 11 used; no autumn-sown barley row" },
+      "root": { "value": 1.25, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.0-1.5 m" },
+      "p": { "value": 0.55, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [5, 6], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 32, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "risk": "Less winter-hardy than wheat; check varieties for your winters."
+    },
+    "rapeseed": {
+      "name": "Winter rapeseed", "family": "Brassicaceae", "winter": true, "waterNeed": "medium",
+      "sow": { "value": 9, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 7, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.35, 1.05, 0.35], "source": "FAO56-T12", "confidence": "medium", "note": "ini: oil crops group value; mid: midpoint of 1.0-1.1" },
+      "stages": { "value": [160, 75, 75, 25], "source": "assumption", "confidence": "low", "note": "rapeseed is not in FAO-56 Table 11; winter wheat row used" },
+      "root": { "value": 1.25, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.0-1.5 m" },
+      "p": { "value": 0.6, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [5], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 29, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 4, "source": "assumption", "confidence": "low" },
+      "risk": "Needs rain around sowing to establish; insect pressure and input costs vary a lot locally."
+    },
+    "maize": {
+      "name": "Maize", "family": "Poaceae", "frostSensitive": true, "waterNeed": "high",
+      "sow": { "value": 4, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 10, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.3, 1.2, 0.35], "source": "FAO56-T12", "confidence": "medium", "note": "ini: cereals group value; end: after field drying" },
+      "stages": { "value": [30, 40, 50, 30], "source": "FAO56-T11", "confidence": "medium", "note": "April planting row (Spain), scaled to the calendar above" },
+      "root": { "value": 1.35, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.0-1.7 m" },
+      "p": { "value": 0.55, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [7], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "risk": "Flowering in mid-summer coincides with the hottest, driest weeks."
+    },
+    "sunflower": {
+      "name": "Sunflower", "family": "Asteraceae", "waterNeed": "medium",
+      "sow": { "value": 4, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 9, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.35, 1.05, 0.35], "source": "FAO56-T12", "confidence": "medium", "note": "ini: oil crops group value; mid: midpoint of 1.0-1.1" },
+      "stages": { "value": [25, 35, 45, 25], "source": "FAO56-T11", "confidence": "medium", "note": "April/May planting row (Mediterranean), scaled to the calendar above" },
+      "root": { "value": 1.15, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 0.8-1.5 m" },
+      "p": { "value": 0.45, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [7], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 5, "source": "assumption", "confidence": "low" },
+      "risk": "Disease and broomrape build up if it returns too often; leaves the soil dry for the next crop."
+    },
+    "sorghum": {
+      "name": "Grain sorghum", "family": "Poaceae", "frostSensitive": true, "waterNeed": "low",
+      "sow": { "value": 5, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 10, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.3, 1.05, 0.55], "source": "FAO56-T12", "confidence": "medium", "note": "ini: cereals group value; mid: midpoint of 1.0-1.1" },
+      "stages": { "value": [20, 35, 40, 30], "source": "FAO56-T11", "confidence": "medium", "note": "May/June planting row, scaled to the calendar above" },
+      "root": { "value": 1.5, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.0-2.0 m" },
+      "p": { "value": 0.55, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [7, 8], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 38, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "risk": "Bird damage, grain drying, and often a thinner market than maize. Needs warm soil at sowing."
+    },
+    "soybean": {
+      "name": "Soybean", "family": "Fabaceae", "legume": true, "frostSensitive": true, "waterNeed": "high",
+      "sow": { "value": 5, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 9, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.4, 1.15, 0.5], "source": "FAO56-T12", "confidence": "medium", "note": "ini: legumes group value" },
+      "stages": { "value": [20, 35, 60, 25], "source": "FAO56-T11", "confidence": "medium", "note": "May planting row (Central USA), scaled to the calendar above" },
+      "root": { "value": 0.95, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 0.6-1.3 m" },
+      "p": { "value": 0.5, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [7, 8], "source": "assumption", "confidence": "low", "note": "flowering and pod fill" },
+      "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 3, "source": "assumption", "confidence": "low" },
+      "nCredit": { "value": [20, 45], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "risk": "Pod fill needs late-summer moisture; seed inoculation is needed where soybean is new."
+    },
+    "pea": {
+      "name": "Field pea", "family": "Fabaceae", "legume": true, "waterNeed": "low",
+      "sow": { "value": 3, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 6, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.5, 1.15, 0.3], "source": "FAO56-T12", "confidence": "medium", "note": "dry/seed peas" },
+      "stages": { "value": [20, 30, 35, 15], "source": "FAO56-T11", "confidence": "medium", "note": "March/April planting row (Mediterranean), scaled to the calendar above" },
+      "root": { "value": 0.8, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 0.6-1.0 m" },
+      "p": { "value": 0.4, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [5, 6], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 28, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 5, "source": "assumption", "confidence": "low" },
+      "nCredit": { "value": [20, 50], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "risk": "Sensitive to heat at flowering and to lodging at harvest; root diseases if it returns too often."
+    },
+    "chickpea": {
+      "name": "Chickpea", "family": "Fabaceae", "legume": true, "waterNeed": "low",
+      "sow": { "value": 3, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 7, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.4, 1.0, 0.35], "source": "FAO56-T12", "confidence": "medium", "note": "ini: legumes group value" },
+      "stages": { "value": [20, 30, 40, 20], "source": "assumption", "confidence": "low", "note": "chickpea is not in FAO-56 Table 11; dry beans row used" },
+      "root": { "value": 0.8, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 0.6-1.0 m" },
+      "p": { "value": 0.5, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [6], "source": "assumption", "confidence": "low" },
+      "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 4, "source": "assumption", "confidence": "low" },
+      "nCredit": { "value": [20, 40], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "risk": "Ascochyta blight in wet springs; the local market can be small."
+    },
+    "alfalfa": {
+      "name": "Alfalfa", "family": "Fabaceae", "legume": true, "forage": true, "waterNeed": "high",
+      "sow": { "value": 3, "source": "assumption", "confidence": "medium" },
+      "harvest": { "value": 10, "source": "assumption", "confidence": "medium" },
+      "kc": { "value": [0.4, 0.95, 0.9], "source": "FAO56-T12", "confidence": "medium", "note": "hay, averaged cutting effects" },
+      "stages": { "value": [10, 30, 150, 20], "source": "assumption", "confidence": "low", "note": "FAO-56 Table 11 gives 10 and 30 days, then 'variable'" },
+      "root": { "value": 1.5, "source": "FAO56-T22", "confidence": "medium", "note": "midpoint of 1.0-2.0 m" },
+      "p": { "value": 0.55, "source": "FAO56-T22", "confidence": "medium" },
+      "flower": { "value": [6, 7, 8], "source": "assumption", "confidence": "low", "note": "summer regrowth, not flowering: forage has no single critical stage" },
+      "heatTmax": { "value": 38, "source": "assumption", "confidence": "low" },
+      "minReturn": { "value": 1, "source": "assumption", "confidence": "low" },
+      "nCredit": { "value": [80, 150], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "risk": "A stand normally stays 3-4 years, so a single year rarely pays. Forage needs livestock or a hay buyer."
+    }
+  },
+  "cover": {
+    "name": "Cover-crop mix (for example vetch + oats)",
+    "kc": { "value": 0.7, "source": "assumption", "confidence": "low" }
+  }
+}
