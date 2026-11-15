@@ -38,7 +38,7 @@
         <figcaption id="l-eyebrow">A farm near Slobozia grows wheat, then maize, then sunflower.</figcaption>
         <p class="l-act" id="l-act"></p>
         <p class="l-fact"><span id="l-what"></span> <span class="l-nums num" id="l-nums"></span> <span id="l-of"></span></p>
-        <a class="l-plan" href="#options" id="l-plan">See the plan →</a>
+        <a class="l-plan" href="#plan" id="l-plan">See the plan →</a>
       </figure>
     </div>
     <figure class="photo" data-slot="hero" data-alt="A grain harvest at working distance">
@@ -211,6 +211,17 @@
       <a class="btn primary" href="#weather">Why: your field's weather</a>
       <a href="#agronomist">Take it to your agronomist</a>
       <a href="#priorities">Back</a>
+    </div>
+  </section>
+
+  <!-- Your plan: a side panel over the options on wide screens, full screen on a phone -->
+  <section data-step="plan" class="plan-panel" hidden aria-labelledby="plan-title">
+    <a href="#options" class="plan-close no-print">✕ Close</a>
+    <div id="plan"></div>
+    <div class="actions no-print">
+      <button type="button" class="btn primary" id="plan-print">Print / Save as PDF</button>
+      <a id="plan-whatsapp" target="_blank" rel="noopener">Send on WhatsApp</a>
+      <a href="#agronomist">Full report for your agronomist</a>
     </div>
   </section>
 

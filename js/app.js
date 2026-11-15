@@ -11,6 +11,7 @@ import { GOALS, sortByGoals } from '../src/model/goals.js';
 import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
 import { loadFarm, saveFarm, clearFarm } from './store.js';
 import { decisionTable, change } from './table.js';
+import { planHtml, planText } from './plan-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -21,15 +22,15 @@ const DEMO_CROPS = ['wheat', 'maize', 'sunflower'];
 const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '' };
 const MAX_YEARS = 5;
 const DEMO_AREA = 120; // ha
-// The coming harvest year: from August on, autumn sowing is for next year's harvest. Block A grows
+// The coming harvest year: from September on, autumn sowing is for next year's harvest. Block A grows
 // the first crop of the rotation in this year; money and the plan both use it.
 const today = new Date();
-const START_YEAR_PLAN = today.getMonth() >= 7 ? today.getFullYear() + 1 : today.getFullYear();
+const START_YEAR_PLAN = today.getMonth() >= 8 ? today.getFullYear() + 1 : today.getFullYear();
 const area = () => { const v = parseFloat($('area').value); return v > 0 && v <= 100000 ? v : DEMO_AREA; };
 
 // ---------- steps ----------
-const STEPS = ['start', 'field', 'crops', 'priorities', 'options', 'weather', 'agronomist', 'how'];
-const NEEDS_DATA = ['options', 'weather', 'agronomist'];
+const STEPS = ['start', 'field', 'crops', 'priorities', 'options', 'plan', 'weather', 'agronomist', 'how'];
+const NEEDS_DATA = ['options', 'plan', 'weather', 'agronomist'];
 const stepId = () => { const id = location.hash.slice(1).split('?')[0]; return STEPS.includes(id) ? id : 'start'; };
 
 async function show(focus = true) {
@@ -39,11 +40,13 @@ async function show(focus = true) {
     if (!state.power) { location.replace('#field'); return; } // the error is shown there
     if (stepId() !== id) return;
   }
-  for (const s of document.querySelectorAll('[data-step]')) s.hidden = s.dataset.step !== id;
+  // The plan opens over the options, which stay underneath on wide screens.
+  for (const s of document.querySelectorAll('[data-step]')) s.hidden = !(s.dataset.step === id || (id === 'plan' && s.dataset.step === 'options'));
+  document.body.classList.toggle('plan-open', id === 'plan');
   if (id === 'field') map.invalidateSize();
   if (id === 'weather') renderClimate(); // the chart is sized to its container, so draw it once visible
   if (id === 'agronomist') renderReport();
-  window.scrollTo(0, 0);
+  if (id === 'plan') { renderPlan(); document.querySelector('[data-step=plan]').scrollTop = 0; } else window.scrollTo(0, 0);
   if (focus) document.querySelector(`[data-step=${id}] [tabindex="-1"]`)?.focus({ preventScroll: true });
 }
 
@@ -338,6 +341,7 @@ function card(c, i, cur, ctx, best) {
     </details>
     <details><summary>What we don't know</summary>${list([`Confidence is ${level.toLowerCase()}. ${reasons.join(' ')}`, ...t.gaps])}
       <p class="src">Plus what the tool can't see for any option, listed once above the cards.</p></details>
+    <p><a class="card-plan" href="#plan" data-plan="${i}">See the plan for this option →</a></p>
     <details><summary>Check with your agronomist</summary>${list(t.risks.length ? t.risks : [NO_RISK])}
       <p><a href="#agronomist" data-pick="${i}">Take this option to your agronomist</a></p></details>
     </article>`;
@@ -429,6 +433,32 @@ function renderOptions() {
   persist();
   $('pick').innerHTML = options.map((c, i) => `<option value="${i}">${esc(title(c).title)}</option>`).join('');
   if (stepId() === 'agronomist') renderReport();
+  if (stepId() === 'plan') renderPlan();
+}
+
+// ---------- your plan ----------
+const planOpts = (c, ctx) => ({ blockHa: equalBlocks(c.rot.crops.length, area()), equal: true, startYear: START_YEAR_PLAN,
+  month0: today.getMonth(), shift: ctx.mo.shift, area: area() });
+
+// The option whose plan is open: a tapped row or card, the landing page's swap, else the best match.
+function planOption() {
+  const r = state.result;
+  if (state.planKey) {
+    const k = state.planKey, j = r.options.findIndex((o) => o.kind === k.kind && o.at === k.at && o.id === k.id);
+    state.planIndex = j >= 0 ? j : 0; state.planKey = null;
+  }
+  state.planIndex = Math.min(state.planIndex ?? 0, r.options.length - 1);
+  return r.options[state.planIndex];
+}
+
+function renderPlan() {
+  const r = state.result;
+  if (!r) { $('plan').innerHTML = '<p class="warn">Your rotation does not fit the calendar yet. <a href="#crops">Change it</a> to see a plan.</p>'; return; }
+  const c = planOption(), o = planOpts(c, r.ctx), { lat, lon } = state.power;
+  $('plan').innerHTML = planHtml(c, r.now, o);
+  $('pick').value = state.planIndex; // the agronomist report follows the open plan
+  $('plan-whatsapp').href = `https://wa.me/?text=${encodeURIComponent(`BioShift, my farm at ${lat.toFixed(2)}, ${lon.toFixed(2)}.\n${planText(c, r.now, o)}\n` +
+    `Money: ${money(c.money.normal)} in a normal year, ${money(c.money.bad)} in a bad year (my estimate, example prices unless I changed them). A plan on NASA weather ${r.ctx.mo.years[0]}–${r.ctx.mo.years.at(-1)}, not advice. ${shareUrl()}`)}`;
 }
 
 // ---------- agronomist report ----------
@@ -464,6 +494,8 @@ function renderReport() {
     <p><b>Grown now:</b> ${esc(rotName(r.now.rot))} (${seasonsOk(r.now)})</p>
     <p><b>Option to discuss:</b> ${esc(t.title)}${c.kind ? `: ${esc(rotName(c.rot))}` : ''} (${seasonsOk(c)})</p>
     <p class="key">${esc(t.key)}</p>
+    <h3>Plan, block by block</h3>${box(planText(c, r.now, planOpts(c, r.ctx)).split('\n').filter((l) => !l.startsWith('Ask: ')).slice(1))}
+    <p class="src">Money for the whole farm, ${Math.round(area())} ha: ${money(c.money.normal)} in a normal year, ${money(c.money.bad)} in a bad year (worst one in five), a loss in ${c.money.lossYears} of ${c.money.n} years. Your estimate, using your numbers and NASA weather. Not a price forecast.</p>
     <h3>Check for this option</h3>${box(t.risks.length ? t.risks : [NO_RISK])}
     <h3>What the tool can't see</h3>${box(shared)}
     <p class="src">BioShift compares options on recorded weather. It supports, it does not replace, your judgment or a local agronomist. Counts are seasons out of trouble, not yields.</p>`;
@@ -554,12 +586,14 @@ for (const id of ['cover', 'livestock', 'allowed']) $(id).addEventListener('chan
 for (const name of ['soil', 'slope', 'irrigation']) for (const el of document.querySelectorAll(`input[name=${name}]`)) el.addEventListener('change', renderOptions);
 $('cards').addEventListener('click', (e) => { if (e.target.dataset.pick != null) $('pick').value = e.target.dataset.pick; });
 $('pick').addEventListener('change', renderReport);
-$('ranking').addEventListener('click', (e) => {
-  const a = e.target.closest('[data-plan]');
-  if (!a) return;
-  e.preventDefault();
-  $(`card-${a.dataset.plan}`)?.scrollIntoView({ behavior: 'smooth' });
-});
+for (const id of ['ranking', 'cards']) {
+  $(id).addEventListener('click', (e) => { // a row or card opens that option's plan
+    const a = e.target.closest('[data-plan]');
+    if (a) state.planIndex = +a.dataset.plan;
+  });
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && stepId() === 'plan') location.hash = '#options'; });
+$('plan-print').addEventListener('click', () => window.print());
 $('print').addEventListener('click', () => window.print());
 
 if (!new URLSearchParams(location.hash.split('?')[1] ?? '').size) applyFarm(loadFarm()); // a shared link wins over the saved farm
