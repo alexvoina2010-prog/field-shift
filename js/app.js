@@ -148,18 +148,21 @@ async function renderLanding() {
   $('l-eyebrow').textContent = `A farm near Slobozia grows wheat, then maize, then sunflower. Replayed on NASA weather, ${START_YEAR} to ${END_YEAR}.`;
   try {
     const { p, elev } = await fetchPower(DEMO.lat, DEMO.lon);
-    const mo = toMonthly(p, DEMO.lat, undefined, elev), at = DEMO_CROPS.indexOf('sunflower');
+    const mo = toMonthly(p, DEMO.lat, undefined, elev);
     const ctx = { mo, clim: summarize(mo).clim, soil: 'loam', slope: 'gentle', lat: DEMO.lat, irrigated: false };
     const allowed = Object.keys(CROPS).filter((id) => !CROPS[id].forage);
     const { cur, alts } = suggest({ crops: DEMO_CROPS, cover: false }, allowed, ctx, Object.fromEntries(METRICS.map((k) => [k, 1])));
-    const now = cur.ev.facts.crops[at], swap = alts.find((a) => a.kind === 'swap' && a.at === at);
-    const seasons = (f) => `${f.hot} <small>of ${f.n} summers</small>`;
-    $('l-now').innerHTML = seasons(now);
-    if (swap) {
-      $('l-swap-name').textContent = `${CROPS[swap.id].name} instead`;
-      $('l-swap').innerHTML = seasons(swap.ev.facts.crops[at]);
-      $('l-swap-row').hidden = false;
-    }
+    const swap = alts.find((a) => a.kind === 'swap');
+    if (!swap) return;
+    // The fact the swap moves most: heat or water at flowering, on the swapped year only.
+    const o = cur.ev.facts.crops[swap.at], x = swap.ev.facts.crops[swap.at], rate = (w, k) => (w.n ? w[k] / w.n : 0);
+    const k = rate(o, 'hot') - rate(x, 'hot') >= rate(o, 'dry') - rate(x, 'dry') ? 'hot' : 'dry';
+    const summer = (id) => CROPS[id].flower.every((m) => m >= 6 && m <= 8);
+    $('l-act').textContent = `Swap ${CROPS[swap.old].name.toLowerCase()} for ${CROPS[swap.id].name.toLowerCase()} in year ${swap.at + 1}.`;
+    $('l-what').textContent = k === 'hot' ? 'Heatwave during flowering:' : 'Short of water at flowering:';
+    $('l-nums').textContent = `${o[k]} → ${x[k]}`;
+    $('l-of').textContent = `of the last ${Math.max(o.n, x.n)} ${summer(swap.old) && summer(swap.id) ? 'summers' : 'seasons'}.`;
+    state.landingPick = { kind: swap.kind, at: swap.at, id: swap.id };
     $('ledger').hidden = false;
   } catch { /* the ledger stays hidden; the headline and "Check my field" still work */ }
 }
@@ -435,6 +438,7 @@ function renderReport() {
 // ---------- events ----------
 window.addEventListener('hashchange', () => { if (restore()) { renderRotation(); loadField(); } show(); });
 $('see-example').addEventListener('click', () => { state.crops = DEMO_CROPS; renderRotation(); setField(DEMO.lat, DEMO.lon, 7); });
+$('l-plan').addEventListener('click', () => { state.crops = DEMO_CROPS; state.planKey = state.landingPick; renderRotation(); setField(DEMO.lat, DEMO.lon, 7); });
 $('place').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchPlace, 500); });
 $('place-results').addEventListener('click', (e) => {
   const b = e.target.closest('button');

@@ -29,20 +29,16 @@
   <section data-step="start" class="landing">
     <div>
       <h1 id="l-head" tabindex="-1">Your rotation, replayed on NASA weather.</h1>
-      <p class="lede">Not a forecast or a recommendation: a replay of what NASA recorded.</p>
+      <p class="lede">Not a forecast. A replay of what NASA recorded.</p>
       <div class="actions">
         <a class="btn primary" href="#field">Check my field</a>
         <a href="#options" id="see-example">See the full example</a>
       </div>
       <figure class="ledger" id="ledger" hidden>
         <figcaption id="l-eyebrow">A farm near Slobozia grows wheat, then maize, then sunflower.</figcaption>
-        <table>
-          <thead><tr><th scope="col">Third crop</th><th scope="col" class="num">Flowered in a heatwave</th></tr></thead>
-          <tbody>
-            <tr><td>Sunflower, as now</td><td class="num" id="l-now"></td></tr>
-            <tr class="pick" id="l-swap-row" hidden><td id="l-swap-name"></td><td class="num" id="l-swap"></td></tr>
-          </tbody>
-        </table>
+        <p class="l-act" id="l-act"></p>
+        <p class="l-fact"><span id="l-what"></span> <span class="l-nums num" id="l-nums"></span> <span id="l-of"></span></p>
+        <a class="l-plan" href="#options" id="l-plan">See the plan →</a>
       </figure>
     </div>
     <figure class="photo" data-slot="hero" data-alt="A grain harvest at working distance">
