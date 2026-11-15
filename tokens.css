@@ -1,36 +1,41 @@
 :root {
   color-scheme: light;
+  /* 8-point spacing */
   --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
-  --text-xs: 0.875rem; --text-sm: 0.9375rem; --text-md: 1.125rem; --text-lg: 1.25rem; --text-xl: 1.5625rem; --text-2xl: 1.953rem; --text-3xl: 2.441rem;
-  --text-display-s: clamp(2.25rem, 3.6vw + 0.75rem, 3.75rem); --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
-  --text-section: clamp(1.875rem, 2vw + 1rem, 2.75rem); --text-title: clamp(1.25rem, 0.75vw + 0.875rem, 1.625rem); --text-lead: clamp(1.125rem, 0.35vw + 1rem, 1.375rem);
+  /* type scale: labels 13, support 14, body 16, card 18-20, section 24-28, main 36-44 */
+  --text-xs: 0.8125rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.125rem; --text-xl: 1.25rem; --text-2xl: 1.625rem; --text-3xl: 2.25rem;
+  --text-display-s: clamp(2.25rem, 2.6vw + 1.2rem, 2.75rem); --text-display: clamp(2.25rem, 2.6vw + 1.2rem, 2.75rem);
+  --text-section: clamp(1.5rem, 1vw + 1.1rem, 1.75rem); --text-title: clamp(1.125rem, 0.4vw + 1rem, 1.25rem); --text-lead: clamp(1.0625rem, 0.3vw + 1rem, 1.1875rem);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
-  --color-error: oklch(52% 0.19 27); --color-success: oklch(50% 0.12 150);
-  --container: 1240px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --dur-micro: 120ms; --dur-short: 200ms; --dur-long: 400ms;
+  --color-error: #A23B1E; --color-success: #2F6B45;
+  --container: 1160px; --gutter: 32px; --gap-columns: 24px;
   --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
 
-  /* Almanac, two changes asked for by the owner: the accent is soil (hue 48, not magenta) and heads are set in the serif */
-  --color-paper: oklch(86% 0.014 240); --color-paper-2: oklch(82% 0.014 240); --color-paper-3: oklch(77% 0.014 240);
-  --color-ink: oklch(17% 0.022 245); --color-ink-2: oklch(25% 0.02 245); --color-muted: oklch(39% 0.018 245);
-  --color-rule: oklch(74% 0.014 240); --color-rule-2: oklch(32% 0.02 240);
-  --color-accent: oklch(45% 0.115 48); --color-accent-2: oklch(37% 0.095 48); --color-accent-ink: oklch(97% 0.008 70); --color-focus: oklch(44% 0.13 48);
-  --color-sheet: oklch(95% 0.008 240);
-  --color-sky: oklch(68% 0.085 238); --color-wheat: oklch(80% 0.13 82); --color-soil: oklch(36% 0.06 50);
-  --font-display: "Newsreader", ui-serif, Georgia, serif;
-  --font-body: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-outlier: "IBM Plex Mono", ui-monospace, monospace;
-  --radius-card: 0; --radius-pill: 2px; --rule-hair: 1px; --rule-bar: 2px; --shadow-card: none;
-  --tracking-display: -0.015em; --display-weight: 600;
+  /* BioShift field palette (brief §11): forest, sage, pale green, harvest gold, warm white, charcoal */
+  --forest: #244D36; --forest-2: #1A3A28; --sage: #6D9467; --pale: #E9EFE5; --gold: #D6A34D; --gold-soft: #F6EBD6;
+  --color-paper: #F5F3ED; --color-paper-2: #ECE9E1; --color-paper-3: #DFDBD0;
+  --color-sheet: #FFFFFF;
+  --color-ink: #29332D; --color-ink-2: #3B463F; --color-muted: #5D6861;
+  --color-rule: #E2DED4; --color-rule-2: #C4BFB2;
+  --color-accent: var(--forest); --color-accent-2: var(--forest-2); --color-accent-ink: #FFFFFF; --color-focus: #244D36;
+  --color-sky: #8DB3CF; --color-wheat: var(--gold); --color-soil: #7A5A3A;
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: "Inter", ui-sans-serif, system-ui, sans-serif; /* numbers: Inter with tabular figures */
+  --radius-card: 16px; --radius-ctl: 10px; --radius-pill: 999px; --rule-hair: 1px; --rule-bar: 2px;
+  --shadow-card: 0 1px 2px rgb(41 51 45 / 0.05), 0 4px 18px rgb(41 51 45 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(41 51 45 / 0.06), 0 12px 32px rgb(41 51 45 / 0.10);
+  --tracking-display: -0.02em; --display-weight: 700;
 
-  /* data colours, kept from v1: Okabe-Ito for good / warn / bad, always paired with a word or a sign */
+  /* data colours: Okabe-Ito for good / warn / bad, always paired with a word or a sign */
   --good: #009E73; --warn: #E69F00; --bad: #D55E00;
-  --good-soft: oklch(92% 0.04 165); --warn-soft: oklch(93% 0.05 80); --bad-soft: oklch(92% 0.04 45);
-  --rain: oklch(52% 0.14 252); --et: #eb6834;
-  --crop: oklch(50% 0.14 252); --legume: #1baf7a; --cover: #eda100;
-  --bare-1: oklch(91% 0.012 240); --bare-2: oklch(80% 0.014 240);
+  --good-soft: #E3F2EA; --warn-soft: #FBF0D9; --bad-soft: #FBE7DC; --good-ink: #1F6B47;
+  --rain: #2F6FA8; --et: #D9682E;
+  --crop: #2F6FA8; --legume: #1BAF7A; --cover: #E3A21A;
+  --bare-1: #EFECE4; --bare-2: #D8D3C6;
   --hz-deficit: #9c3d0c; --hz-heat: #8f1d2c; --hz-frost: #184f95; --hz-rain: #0e6a55;
-  --cell: oklch(91% 0.01 240); --cell-edge: oklch(17% 0.022 245 / 0.08);
+  --cell: #EFECE4; --cell-edge: rgb(41 51 45 / 0.08);
   /* names the scripts read */
   --surface: var(--color-sheet); --grid: var(--color-rule); --text: var(--color-ink); --muted: var(--color-muted);
 }

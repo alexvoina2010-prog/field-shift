@@ -67,5 +67,5 @@ export function ribbon(mo, lay, key) {
       <div class="rb-row rb-head" aria-hidden="true"><span></span>${months.map((n) => `<span>${n[0]}</span>`).join('')}</div>
       ${cells}
     </div>
-    <details><summary>Show as a table</summary><div class="rb-table">${table}</div></details>`;
+    <details class="more"><summary>View detailed monthly data</summary><div class="rb-table">${table}</div></details>`;
 }

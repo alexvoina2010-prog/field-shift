@@ -3,232 +3,341 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BioShift: crop rotations with NASA data</title>
-  <meta name="description" content="Compare crop rotation options for your field using 26 years of NASA climate data.">
+  <title>BioShift: smarter crop-rotation decisions</title>
+  <meta name="description" content="See how your crop rotation would have done on 26 years of NASA weather, compare alternatives and take the results to your agronomist.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap">
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="#start" aria-label="BioShift, start">
-    <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect class="sky" x="0" y="0" width="26" height="7"/><rect class="wheat" x="7" y="9.5" width="19" height="7"/><rect class="soil" x="0" y="19" width="26" height="7"/></svg>
+  <a class="brand" href="#start" aria-label="BioShift, home">
+    <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect class="sky" x="0" y="0" width="26" height="7" rx="2"/><rect class="wheat" x="7" y="9.5" width="19" height="7" rx="2"/><rect class="soil" x="0" y="19" width="26" height="7" rx="2"/></svg>
     BioShift
   </a>
-  <nav class="top-links" aria-label="Page"><a href="#how">How it works</a><a href="#start" id="start-over-top" hidden>Start over</a></nav>
+  <nav class="top-links" aria-label="Site"><a href="#how">How it works</a><a href="#start" id="start-over-top" hidden>Start over</a></nav>
 </header>
 <p id="status" role="status" aria-live="polite"></p>
 
 <main>
-  <!-- 0 Landing: the demo answer, computed from the saved Bărăgan record -->
+  <!-- 0 Landing -->
   <section data-step="start" class="landing">
-    <div>
-      <h1 id="l-head" tabindex="-1">Your rotation, replayed on NASA weather.</h1>
-      <p class="lede">Not a forecast. A replay of what NASA recorded.</p>
-      <div class="actions">
-        <a class="btn primary" href="#field">Check my field</a>
-        <a href="#options" id="see-example">See the full example</a>
+    <div class="hero-copy">
+      <p class="eyebrow">Crop-rotation planning for working farms</p>
+      <h1 id="l-head" tabindex="-1">Make your next crop rotation a smarter decision.</h1>
+      <p class="lede">See how your current crops would have done on 26 years of recorded weather. Compare alternatives and find which rotations could work better for your land.</p>
+      <div class="cta">
+        <a class="btn primary big" href="#field">Analyze my field <span aria-hidden="true">→</span></a>
+        <p class="cta-note">Takes about 3 minutes · No sign-up</p>
       </div>
+      <p class="trust"><span class="dot" aria-hidden="true"></span>Powered by NASA historical weather data · Not a weather forecast</p>
+      <ol class="journey" aria-label="How it works in three steps">
+        <li><b>1</b><span>Your field</span></li>
+        <li><b>2</b><span>Your crops</span></li>
+        <li><b>3</b><span>Your recommendations</span></li>
+      </ol>
+    </div>
+    <div class="hero-side">
+      <figure class="photo" data-slot="hero" data-alt="A grain harvest at working distance">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/960px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 1280w" sizes="(min-width: 60rem) 45vw, 100vw" width="5184" height="3888" alt="A combine harvester unloading grain into a tractor trailer in a cloud of dust" style="object-position: 55% 55%" fetchpriority="high">
+      </figure>
       <figure class="ledger" id="ledger" hidden>
-        <figcaption id="l-eyebrow">A farm near Slobozia grows wheat, then maize, then sunflower.</figcaption>
+        <figcaption><span class="chip">Real example</span> <span id="l-eyebrow">A farm near Slobozia grows wheat, then maize, then sunflower.</span></figcaption>
         <p class="l-act" id="l-act"></p>
         <p class="l-fact"><span id="l-what"></span> <span class="l-nums num" id="l-nums"></span> <span id="l-of"></span></p>
-        <a class="l-plan" href="#plan" id="l-plan">See the plan →</a>
+        <p class="l-links"><a class="l-plan" href="#plan" id="l-plan">See the plan →</a> <a href="#options" id="see-example">Explore the full example</a></p>
       </figure>
     </div>
-    <figure class="photo" data-slot="hero" data-alt="A grain harvest at working distance">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/960px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 1280w" sizes="(min-width: 60rem) 40vw, 100vw" width="5184" height="3888" alt="A combine harvester unloading grain into a tractor trailer in a cloud of dust" style="object-position: 55% 55%" fetchpriority="high">
-    </figure>
   </section>
 
-  <!-- 1 Where is your field? -->
-  <section data-step="field" class="narrow" hidden>
-    <ol class="dots" aria-label="Step 1 of 3"><li aria-current="step"></li><li></li><li></li></ol>
-    <h2 tabindex="-1">Where is your field?</h2>
-    <label for="place">Village or town</label>
-    <input id="place" type="search" autocomplete="off" placeholder="for example Slobozia">
-    <ul id="place-results" class="results" aria-live="polite"></ul>
-    <p class="hint">Search © OpenStreetMap contributors. Or tap the map.</p>
-    <button type="button" id="locate">Use my location</button>
-    <div id="map" role="application" aria-label="Map. Tap to choose your field."></div>
-    <p class="hint" id="layer-note">Tap the map to move the field marker.</p>
-    <div class="draw-row">
-      <button type="button" id="draw-start">Draw your field</button>
-      <button type="button" class="btn primary" id="draw-done" hidden>Done</button>
-      <button type="button" id="draw-clear" hidden>Clear outline</button>
+  <!-- 1 Your field -->
+  <section data-step="field" class="step" hidden>
+    <ol class="progress" data-at="0"></ol>
+    <div class="step-head">
+      <h2 tabindex="-1">Where is your farm?</h2>
+      <p class="lead">We'll use your location to analyze historical weather and growing conditions.</p>
     </div>
-    <p class="hint" id="draw-note" role="status" aria-live="polite">Weather comes from NASA's grid for your area (about 50 km); the outline gives your farm size.</p>
-    <details>
-      <summary>More map layers</summary>
-      <fieldset class="layers" id="layers">
-        <legend>NASA satellite layer</legend>
-        <label><input type="radio" name="layer" value="" checked> None</label>
-        <label><input type="radio" name="layer" value="ndvi"> Vegetation (NDVI)</label>
-        <label><input type="radio" name="layer" value="smap"> Root-zone soil moisture</label>
-        <label><input type="radio" name="layer" value="imerg"> Rainfall, latest</label>
-        <label id="ndvi-month-wrap" hidden>Month <input type="month" id="ndvi-month" min="2000-03"></label>
-      </fieldset>
-    </details>
-    <details>
-      <summary>Exact coordinates</summary>
-      <div class="row2">
-        <label>Latitude <input id="lat" type="number" step="0.01" min="-60" max="70" value="44.56" required></label>
-        <label>Longitude <input id="lon" type="number" step="0.01" min="-180" max="180" value="27.36" required></label>
-      </div>
-    </details>
-    <details>
-      <summary>Example fields</summary>
-      <div class="presets">
-        <button type="button" data-lat="44.56" data-lon="27.36">Bărăgan Plain, Romania</button>
-        <button type="button" data-lat="38.5" data-lon="-98.5">Kansas, USA</button>
-        <button type="button" data-lat="-36.7" data-lon="142.2">Wimmera, Australia</button>
-      </div>
-    </details>
 
-    <fieldset class="picks">
-      <legend>Soil</legend>
-      <label><input type="radio" name="soil" value="sandy">Sandy, drains fast</label>
-      <label><input type="radio" name="soil" value="loam" checked>Loam, in between</label>
-      <label><input type="radio" name="soil" value="clay">Clay, holds water</label>
+    <div class="card-box">
+      <div class="search-row">
+        <div class="search-field">
+          <label for="place">Search village or town</label>
+          <input id="place" type="search" autocomplete="off" placeholder="For example: Slobozia">
+        </div>
+        <button type="button" id="locate"><span aria-hidden="true">◎</span> Use my location</button>
+      </div>
+      <ul id="place-results" class="results" aria-live="polite"></ul>
+      <div class="presets" role="group" aria-labelledby="presets-l">
+        <span id="presets-l" class="presets-l">Or try an example:</span>
+        <button type="button" class="chip-btn" data-lat="44.56" data-lon="27.36">Bărăgan Plain, Romania</button>
+        <button type="button" class="chip-btn" data-lat="38.5" data-lon="-98.5">Kansas, USA</button>
+        <button type="button" class="chip-btn" data-lat="-36.7" data-lon="142.2">Wimmera, Australia</button>
+      </div>
+      <div id="map" role="application" aria-label="Map. Tap to choose your field. You can also search above or use an example."></div>
+      <p class="hint" id="layer-note">Tap the map to place your field.</p>
+      <div class="draw-row">
+        <button type="button" id="draw-start">✎ Draw your field outline</button>
+        <button type="button" class="btn primary" id="draw-done" hidden>Done</button>
+        <button type="button" id="draw-clear" hidden>Clear outline</button>
+        <details class="tip">
+          <summary aria-label="About the weather grid">i</summary>
+          <p>Weather comes from NASA's grid for your area, squares about 50 km wide. Small hollows and local storms are averaged out. Drawing an outline sets your farm size; it does not change the weather.</p>
+        </details>
+      </div>
+      <p class="hint" id="draw-note" role="status" aria-live="polite"></p>
+      <details class="more">
+        <summary>Advanced map layers</summary>
+        <fieldset class="layers" id="layers">
+          <legend>NASA satellite layer</legend>
+          <label><input type="radio" name="layer" value="" checked> None</label>
+          <label><input type="radio" name="layer" value="ndvi"> Vegetation (NDVI)</label>
+          <label><input type="radio" name="layer" value="smap"> Root-zone soil moisture</label>
+          <label><input type="radio" name="layer" value="imerg"> Rainfall, latest</label>
+          <label id="ndvi-month-wrap" hidden>Month <input type="month" id="ndvi-month" min="2000-03"></label>
+        </fieldset>
+      </details>
+      <details class="more">
+        <summary>Exact coordinates</summary>
+        <div class="row2">
+          <label>Latitude <input id="lat" type="number" step="0.01" min="-60" max="70" value="44.56" required></label>
+          <label>Longitude <input id="lon" type="number" step="0.01" min="-180" max="180" value="27.36" required></label>
+        </div>
+      </details>
+    </div>
+
+    <div class="step-head">
+      <h2 class="h-sub">Tell us about your land</h2>
+    </div>
+    <fieldset class="picks visual">
+      <legend>Soil type</legend>
+      <label><input type="radio" name="soil" value="sandy"><span class="pick-ico" data-ico="soil-sandy"></span><span class="pick-t">Sandy</span><span class="pick-d">Drains quickly</span></label>
+      <label><input type="radio" name="soil" value="loam" checked><span class="pick-ico" data-ico="soil-loam"></span><span class="pick-t">Loamy</span><span class="pick-d">In between</span></label>
+      <label><input type="radio" name="soil" value="clay"><span class="pick-ico" data-ico="soil-clay"></span><span class="pick-t">Clay</span><span class="pick-d">Holds water</span></label>
     </fieldset>
-    <p class="hint">Not sure? A soil test beats a guess. Ask your agronomist.</p>
-    <fieldset class="picks">
-      <legend>Slope</legend>
-      <label><input type="radio" name="slope" value="flat">Flat</label>
-      <label><input type="radio" name="slope" value="gentle" checked>Gentle slope</label>
-      <label><input type="radio" name="slope" value="steep">Steep slope</label>
+    <p class="hint">Not sure? Pick the closest. A soil test beats a guess.</p>
+    <fieldset class="picks visual">
+      <legend>Terrain</legend>
+      <label><input type="radio" name="slope" value="flat"><span class="pick-ico" data-ico="terrain-flat"></span><span class="pick-t">Flat</span></label>
+      <label><input type="radio" name="slope" value="gentle" checked><span class="pick-ico" data-ico="terrain-gentle"></span><span class="pick-t">Gentle slope</span></label>
+      <label><input type="radio" name="slope" value="steep"><span class="pick-ico" data-ico="terrain-steep"></span><span class="pick-t">Steep slope</span></label>
     </fieldset>
-    <fieldset class="picks">
-      <legend>Can you irrigate?</legend>
-      <label><input type="radio" name="irrigation" value="none" checked>No irrigation</label>
-      <label><input type="radio" name="irrigation" value="some">Sometimes</label>
-      <label><input type="radio" name="irrigation" value="full">Fully irrigated</label>
+    <fieldset class="picks visual">
+      <legend>Irrigation</legend>
+      <label><input type="radio" name="irrigation" value="none" checked><span class="pick-ico" data-ico="irr-none"></span><span class="pick-t">No irrigation</span><span class="pick-d">Rain only</span></label>
+      <label><input type="radio" name="irrigation" value="some"><span class="pick-ico" data-ico="irr-some"></span><span class="pick-t">Sometimes</span></label>
+      <label><input type="radio" name="irrigation" value="full"><span class="pick-ico" data-ico="irr-full"></span><span class="pick-t">Fully irrigated</span></label>
     </fieldset>
     <fieldset id="farm-size">
-      <legend>How big is the farm?</legend>
-      <label for="area">Or type the size: hectares</label>
-      <input id="area" type="number" inputmode="decimal" min="1" max="100000" step="any" value="120">
-      <p class="hint">Used for whole-farm money and block sizes. Drawing your field above fills it in.</p>
+      <legend><label for="area">Farm size</label></legend>
+      <div class="unit-input"><input id="area" type="number" inputmode="decimal" min="1" max="100000" step="any" value="120" aria-describedby="area-hint area-err"><span aria-hidden="true">hectares</span></div>
+      <p class="hint" id="area-hint">Used for whole-farm money and block sizes. Drawing your field outline fills it in.</p>
+      <p class="field-err" id="area-err" role="alert" hidden>Enter a size between 1 and 100,000 hectares. Until then, 120 ha is used.</p>
     </fieldset>
     <div class="actions">
-      <a class="btn primary" href="#crops">Next</a>
+      <a class="btn primary" href="#crops">Next: your crops <span aria-hidden="true">→</span></a>
       <a href="#start">Back</a>
     </div>
   </section>
 
-  <!-- 2 What do you grow? -->
-  <section data-step="crops" class="narrow" hidden>
-    <ol class="dots" aria-label="Step 2 of 3"><li></li><li aria-current="step"></li><li></li></ol>
-    <h2 tabindex="-1">What do you grow?</h2>
-    <p class="hint">One crop per year, in the order you grow them.</p>
-    <div id="rotation"></div>
-    <p class="hint flag-note" id="rotation-flags" aria-live="polite"></p>
-    <button type="button" id="add-year">+ Add a year</button>
-    <label class="check"><input type="checkbox" id="cover"> I already sow cover crops in long gaps</label>
+  <!-- 2 Your crops -->
+  <section data-step="crops" class="step" hidden>
+    <ol class="progress" data-at="1"></ol>
+    <div class="step-head">
+      <h2 tabindex="-1">Your current crop rotation</h2>
+      <p class="lead">Add your crops in the order you grow them, one per year. After the last year, the rotation starts again.</p>
+    </div>
+    <div class="rotation-wrap">
+      <ol id="rotation" class="rotation" aria-label="Your rotation, year by year"></ol>
+      <div class="rot-end">
+        <button type="button" id="add-year" class="add-card"><span aria-hidden="true">+</span> Add another year <small></small></button>
+        <p class="loop-note"><span aria-hidden="true">↻</span> <span id="loop-note"></span></p>
+      </div>
+    </div>
+    <p class="hint">Tip: use the arrows, or drag a card, to change the order.</p>
+    <p class="flag-note" id="rotation-flags" aria-live="polite"></p>
+    <fieldset class="picks compact" id="cover-q">
+      <legend>Do you plant cover crops between harvests? <span class="opt">Optional</span></legend>
+      <label><input type="radio" name="cover" value="yes"><span class="pick-t">Yes</span></label>
+      <label><input type="radio" name="cover" value="no" checked><span class="pick-t">No</span></label>
+      <label><input type="radio" name="cover" value="some"><span class="pick-t">Sometimes</span></label>
+    </fieldset>
+    <p class="hint">"Sometimes" is replayed as no cover crop, so the cover-crop option still shows what sowing one every year would change.</p>
     <div class="actions">
-      <a class="btn primary" href="#priorities">Next</a>
+      <a class="btn primary" href="#priorities">Next: your priorities <span aria-hidden="true">→</span></a>
       <a href="#field">Back</a>
     </div>
   </section>
 
-  <!-- 3 What matters to you? -->
-  <section data-step="priorities" class="narrow" hidden>
-    <ol class="dots" aria-label="Step 3 of 3"><li></li><li></li><li aria-current="step"></li></ol>
-    <h2 tabindex="-1">What matters to you?</h2>
-    <fieldset class="picks one-col" id="prio">
-      <legend>What matters most? Pick up to 2</legend>
+  <!-- 3 Priorities and constraints -->
+  <section data-step="priorities" class="step" hidden>
+    <ol class="progress" data-at="2"></ol>
+    <div class="step-head">
+      <h2 tabindex="-1">What matters most to your farm?</h2>
+      <p class="lead">Choose up to two priorities. We'll use them to rank your crop-rotation options.</p>
+    </div>
+    <fieldset class="goals" id="prio" aria-describedby="goal-count">
+      <legend class="visually-hidden">Your priorities, up to two</legend>
     </fieldset>
-    <p class="hint">Your goals only change the order of the options. Every number stays the same.</p>
-    <details>
-      <summary>Fine-tune (advanced): model weights</summary>
-      <p class="hint">The five model scores behind the options. These weights decide which alternatives are shown and the 0 to 100 model score on each card; with no goal picked above, they also set the order. Slide right for "matters a lot". They never change the scores themselves.</p>
+    <p class="counter" id="goal-count" aria-live="polite"></p>
+    <p class="hint">Priorities only change the order of the options. Every number stays the same, and none is a promise.</p>
+
+    <div class="step-head">
+      <h2 class="h-sub">What constraints do you have?</h2>
+    </div>
+    <div class="card-box">
+      <fieldset class="chips-pick">
+        <legend>Crops you can't grow or sell</legend>
+        <p class="hint">Tap a crop to leave it out (no machinery, no market, or no interest).</p>
+        <div id="allowed"></div>
+      </fieldset>
+      <div class="check-row">
+        <label class="check"><input type="checkbox" id="livestock"> I have livestock or a hay buyer</label>
+        <details class="tip"><summary aria-label="Why we ask about livestock">i</summary><p>Without one, forage crops such as alfalfa are left out of the options: there is no one to sell them to.</p></details>
+      </div>
+      <p class="echo">Irrigation: <b id="irr-echo"></b> <a href="#field">Change</a></p>
+    </div>
+
+    <details class="more advanced">
+      <summary>Advanced settings: model weights</summary>
+      <p class="hint">The five model scores behind the options. These weights decide which alternatives are found and the 0 to 100 model score on each option; with no priority picked above, they also set the order. They never change the scores themselves.</p>
       <div id="weights"></div>
     </details>
-    <p class="echo">Can you irrigate? <b id="irr-echo"></b> <a href="#field">Edit</a></p>
-    <fieldset class="chips-pick">
-      <legend>Crops you can't grow or sell? Tap to remove</legend>
-      <p class="hint">machinery, market or no interest</p>
-      <div id="allowed"></div>
-    </fieldset>
-    <label class="check"><input type="checkbox" id="livestock"> I have livestock or a hay buyer</label>
-    <p class="hint">Without one, forage crops such as alfalfa are left out.</p>
     <div class="actions">
-      <a class="btn primary" href="#options">Show my options</a>
+      <a class="btn primary" href="#options">Show my recommendations <span aria-hidden="true">→</span></a>
       <a href="#crops">Back</a>
     </div>
   </section>
 
-  <!-- 4 Your options -->
-  <section data-step="options" hidden>
-    <h2 tabindex="-1">Your options</h2>
-    <p class="answer" id="answer"></p>
-    <div id="farm-strips"></div>
-    <div class="stress" id="stress">
-      <span class="label">Stress test</span>
-      <button type="button" data-rain="0" data-temp="0">Today's climate</button>
-      <button type="button" data-rain="0" data-temp="1.5">+1.5 °C</button>
-      <button type="button" data-rain="-20" data-temp="1.5">Hotter and 20 % drier</button>
-      <details>
-        <summary>Custom</summary>
-        <label>Rainfall <output id="rain-out">no change</output>
-          <input type="range" id="sc-rain" min="-30" max="30" step="5" value="0">
-        </label>
-        <label>Temperature <output id="temp-out">no change</output>
-          <input type="range" id="sc-temp" min="0" max="3" step="0.5" value="0">
-        </label>
-        <p class="hint">Replays the same 26 years with less or more rain, or warmer days. A stress test, not a forecast.</p>
-      </details>
-    </div>
+  <!-- 4 Results -->
+  <section data-step="options" class="results" hidden>
+    <header class="analysis-head">
+      <div>
+        <p class="eyebrow">Your rotation analysis</p>
+        <h2 tabindex="-1" id="analysis-title">Your rotation analysis</h2>
+        <ul class="meta" id="analysis-meta"></ul>
+      </div>
+      <div class="head-actions">
+        <a href="#priorities" class="btn">Adjust inputs</a>
+        <a href="#agronomist" class="btn">Share with an agronomist</a>
+      </div>
+    </header>
     <p id="scenario-note" class="warn" hidden></p>
-    <div id="ranking" class="decide-wrap"></div>
-    <p class="hint">This tool supports, it does not replace, your judgment or a local agronomist.</p>
-    <details class="panel" id="costs-panel">
-      <summary>Your costs and prices</summary>
-      <p class="warn">Example values, change them to yours. Every money figure on this page is your estimate, using your numbers and NASA weather. Not a price forecast.</p>
-      <p class="hint">"Yield with no water shortage" is the most this field gives in a year with enough water, about your irrigated yield. Each replayed season then loses yield for the water it lacked (FAO-33 yield response). Costs are per hectare, every year, good or bad.</p>
-      <div id="costs"></div>
-      <button type="button" id="reset-costs">Reset to examples</button>
-    </details>
-    <details class="panel" id="more">
-      <summary>Tell us more about your farm: confidence rises</summary>
-      <p class="hint">Every answer is optional and kept in this browser only. Each one raises the confidence of only the part it really informs.</p>
-      <div id="meters"></div>
-      <div id="more-inputs"></div>
-    </details>
-    <details class="panel" id="shared">
-      <summary>What this tool still can't see (applies to all options)</summary>
-      <ul>
-        <li><strong>Your field itself.</strong> Climate comes from a NASA grid cell about 50 km wide. Hollows, frost pockets and local storms are averaged away, and model data can run hotter or drier than a nearby weather station.</li>
-        <li><strong>Your soil.</strong> Only the soil type and slope you picked are used. A soil test (organic matter, pH, compaction) would change the picture.</li>
-        <li><strong>Irrigation.</strong> The replay is rain-fed. If you irrigate, the water count is shown but left out of the total.</li>
-        <li><strong>Money.</strong> Profit is your estimate from the prices and costs under "Your costs and prices" (example values until you change them). Subsidies, contracts, storage, rent and loans are not included, and yield losses count water shortage only, not heat, pests or hail.</li>
-        <li><strong>Seed and licence rules.</strong> Seed variety rules (for example GMO bans) and local licences are not checked.</li>
-        <li><strong>Pests, diseases and weeds actually present.</strong> Only general rules on how often a crop should return.</li>
-        <li><strong>Local crop calendars and varieties.</strong> Sowing dates, flowering months and heat limits are assumptions for temperate Europe, not your varieties.</li>
+    <div id="top-pick"></div>
+
+    <section class="block" aria-labelledby="cmp-h">
+      <div class="block-head">
+        <h3 id="cmp-h">Compare your options</h3>
+        <p class="hint">Your current rotation is the baseline. Tap an option to open its plan.</p>
+      </div>
+      <div id="ranking" class="decide-wrap"></div>
+    </section>
+
+    <section class="block" aria-labelledby="st-h">
+      <div class="block-head">
+        <h3 id="st-h">Test your rotation against different climates</h3>
+        <p class="hint">Replay the same 26 years warmer or drier and see whether the best option changes. A stress test, not a forecast.</p>
+      </div>
+      <div class="stress" id="stress" role="group" aria-label="Climate scenario">
+        <button type="button" class="scenario" data-rain="0" data-temp="0"><span class="sc-ico" data-ico="sc-now"></span><b>Current</b><small>Recorded weather</small></button>
+        <button type="button" class="scenario" data-rain="0" data-temp="1.5"><span class="sc-ico" data-ico="sc-warm"></span><b>Warmer</b><small>+1.5 °C every day</small></button>
+        <button type="button" class="scenario" data-rain="-20" data-temp="1.5"><span class="sc-ico" data-ico="sc-dry"></span><b>Hotter and drier</b><small>+1.5 °C, 20 % less rain</small></button>
+        <details class="more custom">
+          <summary>Build your own climate scenario</summary>
+          <label>Rainfall <output id="rain-out">no change</output>
+            <input type="range" id="sc-rain" min="-30" max="30" step="5" value="0">
+          </label>
+          <label>Temperature <output id="temp-out">no change</output>
+            <input type="range" id="sc-temp" min="0" max="3" step="0.5" value="0">
+          </label>
+        </details>
+      </div>
+      <div id="stress-result" aria-live="polite"></div>
+    </section>
+
+    <section class="block" aria-labelledby="farm-h">
+      <div class="block-head"><h3 id="farm-h">Your farm this year</h3></div>
+      <div id="farm-strips"></div>
+    </section>
+
+    <section class="block" aria-labelledby="cards-h">
+      <div class="block-head">
+        <h3 id="cards-h">Every option in detail</h3>
+        <p class="hint">Why each option, the evidence from the replay, what we don't know, and what to check.</p>
+      </div>
+      <ul class="legend" aria-label="Calendar legend">
+        <li><span class="sw crop"></span>Crop</li>
+        <li><span class="sw legume"></span>Legume crop</li>
+        <li><span class="sw cover"></span>Cover crop</li>
+        <li><span class="sw bare"></span>Bare soil</li>
+        <li>The calendar is a loop: what runs off the right edge continues on the left.</li>
       </ul>
-      <p>Before changing a rotation, review these points with a local agronomist or extension service.</p>
-    </details>
-    <div id="cards" class="cards"></div>
-    <ul class="legend" aria-label="Calendar legend">
-      <li><span class="sw crop"></span>Crop</li>
-      <li><span class="sw legume"></span>Legume crop</li>
-      <li><span class="sw cover"></span>Cover crop</li>
-      <li><span class="sw bare"></span>Bare soil</li>
-      <li>The calendar is a loop: what runs off the right edge continues on the left.</li>
-    </ul>
+      <div id="cards" class="cards"></div>
+    </section>
+
+    <section class="block" aria-labelledby="own-h">
+      <div class="block-head">
+        <h3 id="own-h">Make the numbers yours</h3>
+        <p class="hint">Money uses example prices until you enter yours. Each answer raises confidence only in the part it informs.</p>
+      </div>
+      <details class="panel" id="costs-panel">
+        <summary>Your costs and prices</summary>
+        <p class="warn">Example values, change them to yours. Every money figure on this page is your estimate, using your numbers and NASA weather. Not a price forecast.</p>
+        <p class="hint">"Yield with no water shortage" is the most this field gives in a year with enough water, about your irrigated yield. Each replayed season then loses yield for the water it lacked. Costs are per hectare, every year, good or bad.</p>
+        <div id="costs"></div>
+        <button type="button" id="reset-costs">Reset to examples</button>
+      </details>
+      <details class="panel" id="more">
+        <summary>Tell us more about your farm</summary>
+        <p class="hint">Every answer is optional and kept in this browser only.</p>
+        <div id="meters"></div>
+        <div id="more-inputs"></div>
+      </details>
+    </section>
+
+    <section class="block" aria-labelledby="lim-h">
+      <div class="block-head">
+        <h3 id="lim-h">Confidence and limitations</h3>
+        <p class="hint">BioShift compares options on recorded weather. It supports, it does not replace, your judgment or a local agronomist. No result is a promise of yield or profit.</p>
+      </div>
+      <details class="panel" id="shared">
+        <summary>What this tool can't see (applies to all options)</summary>
+        <h4>Weather data</h4>
+        <ul>
+          <li><strong>Your field itself.</strong> Climate comes from a NASA grid cell about 50 km wide. Hollows, frost pockets and local storms are averaged away, and model data can run hotter or drier than a nearby weather station.</li>
+          <li><strong>Irrigation.</strong> The replay is rain-fed. If you irrigate, the water count is shown but left out of the total.</li>
+        </ul>
+        <h4>Your field</h4>
+        <ul>
+          <li><strong>Your soil.</strong> Only the soil type and slope you picked are used. A soil test (organic matter, pH, compaction) would change the picture.</li>
+          <li><strong>Pests, diseases and weeds actually present.</strong> Only general rules on how often a crop should return.</li>
+        </ul>
+        <h4>Money</h4>
+        <ul>
+          <li><strong>Money.</strong> Profit is your estimate from the prices and costs under "Your costs and prices" (example values until you change them). Subsidies, contracts, storage, rent and loans are not included, and yield losses count water shortage only, not heat, pests or hail.</li>
+        </ul>
+        <h4>Crops and rules</h4>
+        <ul>
+          <li><strong>Seed and licence rules.</strong> Seed variety rules (for example GMO bans) and local licences are not checked.</li>
+          <li><strong>Local crop calendars and varieties.</strong> Sowing dates, flowering months and heat limits are assumptions for temperate Europe, not your varieties.</li>
+        </ul>
+        <p>Before changing a rotation, review these points with a local agronomist or extension service.</p>
+      </details>
+      <p class="method-link"><a href="#how">Read the scientific methodology →</a></p>
+    </section>
+
     <div class="actions">
-      <a class="btn primary" href="#weather">Why: your field's weather</a>
+      <a class="btn primary" href="#weather">See your field's weather history <span aria-hidden="true">→</span></a>
       <a href="#agronomist">Take it to your agronomist</a>
       <a href="#priorities">Back</a>
     </div>
   </section>
 
-  <!-- Your plan: a side panel over the options on wide screens, full screen on a phone -->
+  <!-- Your plan: a side panel over the results on wide screens, full screen on a phone -->
   <section data-step="plan" class="plan-panel" hidden aria-labelledby="plan-title">
     <a href="#options" class="plan-close no-print">✕ Close</a>
     <div id="plan"></div>
@@ -239,39 +348,49 @@
     </div>
   </section>
 
-  <!-- 5 Why: your field's weather -->
+  <!-- 5 Historical weather -->
   <section data-step="weather" hidden>
-    <h2 tabindex="-1">Why: your field's weather since 2000</h2>
-    <div id="tiles" class="tiles"></div>
-    <div class="panel">
-      <h3>Every month since 2000, at a glance</h3>
-      <p class="hint">Each square is one month. Darker means more of the problem. The bars on top show when your crops are in the ground; ● marks the months they flower, outlined in every year.</p>
-      <fieldset class="layers" id="hazard">
-        <legend>Show</legend>
-        <label><input type="radio" name="hazard" value="heat" checked> Very hot days</label>
-        <label><input type="radio" name="hazard" value="deficit"> Water shortfall</label>
-        <label><input type="radio" name="hazard" value="frost"> Frost days</label>
-        <label><input type="radio" name="hazard" value="rain"> Heavy-rain days</label>
+    <div class="step-head">
+      <p class="eyebrow" id="weather-eyebrow">Your field's weather</p>
+      <h2 tabindex="-1">Historical weather patterns</h2>
+      <p class="lead">How often has your farm had conditions that could hurt crops?</p>
+    </div>
+    <div class="panel chart-panel">
+      <fieldset class="seg-ctl" id="hazard">
+        <legend class="visually-hidden">Weather indicator</legend>
+        <label><input type="radio" name="hazard" value="deficit" checked><span>Water stress</span></label>
+        <label><input type="radio" name="hazard" value="heat"><span>Extreme heat</span></label>
+        <label><input type="radio" name="hazard" value="rain"><span>Heavy rain</span></label>
+        <label><input type="radio" name="hazard" value="frost"><span>Frost</span></label>
       </fieldset>
+      <p class="story" id="ribbon-story" aria-live="polite"></p>
+      <p class="hint">Each square is one month since 2000; darker means more of the problem. The bars on top show when your crops are in the ground, and ● marks flowering, when a bad month costs the most.</p>
       <div id="ribbon"></div>
       <p class="hint" id="ribbon-readout" role="status" aria-live="polite">Tap or point at a square to see that month's numbers.</p>
     </div>
-    <div class="panel">
-      <h3>Rain against the water a crop can use, month by month</h3>
-      <p class="hint">Where the orange line is above the blue bars, plants need more water than the rain brings. They live on water stored in the soil, or suffer.</p>
+
+    <div class="block-head"><h3>Is it changing?</h3><p class="hint">Each trend is tested; we only call it clear when the test says so.</p></div>
+    <div id="tiles" class="tiles"></div>
+
+    <div class="panel chart-panel">
+      <h3>Rain against crop water need, month by month</h3>
+      <p class="hint">Where the orange line is above the blue bars, crops need more water than the rain brings. They live on water stored in the soil, or suffer.</p>
       <div id="chart"></div>
-      <details><summary>Show as a table</summary><div id="chart-table"></div></details>
+      <details class="more"><summary>View detailed monthly data</summary><div id="chart-table"></div></details>
     </div>
     <p class="hint" id="climate-note"></p>
     <div class="actions">
-      <a class="btn primary" href="#agronomist">Take it to your agronomist</a>
-      <a href="#options">Back</a>
+      <a class="btn primary" href="#agronomist">Take it to your agronomist <span aria-hidden="true">→</span></a>
+      <a href="#options">Back to results</a>
     </div>
   </section>
 
-  <!-- 6 Take it to your agronomist -->
-  <section data-step="agronomist" class="narrow" hidden>
-    <h2 tabindex="-1">Take this to your agronomist</h2>
+  <!-- 6 Agronomist report -->
+  <section data-step="agronomist" class="step" hidden>
+    <div class="step-head">
+      <h2 tabindex="-1">Take this to your agronomist</h2>
+      <p class="lead no-print">A one-page summary to print, save as PDF or send.</p>
+    </div>
     <label class="no-print" for="pick">Option to discuss</label>
     <select id="pick" class="no-print"></select>
     <div id="report"></div>
@@ -281,51 +400,83 @@
     <div class="actions">
       <button type="button" class="btn primary" id="print">Print / Save as PDF</button>
       <a id="whatsapp" target="_blank" rel="noopener">Send on WhatsApp</a>
-      <a href="#options">Back</a>
+      <a href="#options">Back to results</a>
     </div>
   </section>
 
-  <!-- How it works: method, limits, glossary -->
-  <section data-step="how" class="narrow" hidden>
-    <h2 tabindex="-1">How it works</h2>
-    <p>BioShift replays the weather NASA recorded for your field since 2000 against your rotation and a few alternatives, and counts how often each would have been in trouble. It supports, it does not replace, your judgment or a local agronomist.</p>
-    <h3>Data and method</h3>
-    <ul>
-      <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000 to 2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
-      <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
-      <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
-      <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
-      <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>
-      <li><strong>"Heatwave at flowering":</strong> 5 or more days above the crop's heat limit while it flowers.</li>
-      <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>
-      <li><strong>Yield in each replayed season:</strong> FAO-33 yield response, 1 − Ya/Ym = Ky × (1 − ETa/ETc), over the whole season from sowing to harvest. ETc is what the crop would use with enough water (crop coefficient × reference ET); ETa is what the daily water balance let it use. Ky values come from FAO Irrigation and Drainage Paper 66, Table 1 (which reprints Paper 33): winter wheat 1.05, maize 1.25, sunflower 0.95, sorghum 0.9, soybean 0.85, peas 1.15, alfalfa 1.1. Barley, rapeseed and chickpea are not in that table; their Ky is an assumption and labelled so. Only water shortage lowers yield; heat at flowering is counted separately. A fully irrigated field gets no water loss (irrigation water and its cost are not modelled).</li>
-      <li><strong>Money:</strong> profit per hectare = yield × your price − your five costs (seed, fertiliser, crop protection, machinery and fuel, labour). Starting values are examples for a rain-fed farm in South-East Romania, not market data. Whole-farm profit for each replayed year adds up every block: a rotation of N years on your farm is N equal blocks, each one year ahead of the next, so every crop is grown every year. "Normal year" is the median of the replayed years; "bad year" is the 20th percentile, the worst one year in five; "years with a loss" counts years below zero. It is your estimate, not a price or yield forecast. For the cover-crop option, the water the cover crop uses is counted, but its seed and sowing costs are not: add them to your costs if you compare it closely.</li>
-      <li><strong>Confidence meters (Weather, Soil, Money, Calendar):</strong> an answer under "Tell us more" raises only the area it changes. Weather stays Medium whatever you enter: one NASA grid cell, one rainfall source. Soil rises to Medium with a soil test, which adds notes to each option but does not change the water balance. Money rises to Medium when you enter your own price for every crop shown. Calendar rises to Medium when you enter your usual sowing month for every crop shown; those months change the plan dates only, not the replay. Machinery you own changes "Less work" and "Extra work"; pests you have seen add questions to the plan. Neither moves a meter.</li>
-      <li><strong>"Rarely suits your area":</strong> <span id="flag-rules"></span></li>
-      <li><strong>Your field outline and blocks:</strong> the outline you draw gives the farm size (area on the WGS84 sphere, the same formula as Leaflet.draw) and moves the weather point to its middle. Weather still comes from the NASA grid cell around it (about 50 km), so the outline changes the hectares, not the weather. Blocks start equal; the − and + buttons move 5 ha between blocks without changing the farm total. The map is not split; the blocks are a diagram.</li>
-      <li><strong>Your goals:</strong> More profit (normal-year profit); Steadier income (bad-year profit, lowered by the share of loss years); Less work and machinery (workload of each crop, plus half a step for each machine the farm does not use now); Healthier soil (legume years, soil covered when heavy rain falls, fewer bare months); Use less water (how often crops were short of water at flowering). Each goal is scaled 0 to 1 across the options shown and the picked goals are averaged. Goals only order the options; the alternatives themselves are found with the model weights under "Fine-tune (advanced)", so the most profitable possible change may not be among them.</li>
-      <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 model score divided by ten and rounded.</li>
-      <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35° to 60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
-      <li><strong>Soil organic matter</strong> is a qualitative note from months of bare soil and cover crops, not a measurement or a score.</li>
-      <li><strong>Trends:</strong> Mann-Kendall test with Sen's slope on one value per year. "How sure: strong" means p is below 0.05; "weak" means p between 0.05 and 0.1; otherwise no trend is claimed.</li>
-      <li><strong>Heavy-rain days:</strong> days with 10 mm or more (the standard R10mm index).</li>
-      <li><strong>Crop table:</strong> <code>data/crops.json</code>. Crop coefficients, stage lengths, rooting depths and depletion fractions are FAO-56 table values. Sowing and flowering months, heat limits and return intervals are assumptions with low confidence, and are labelled as such.</li>
-      <li><strong>Scores:</strong> five 0 to 100 scores per rotation, each a count over replayed seasons or years, combined as a weighted average using your priorities. The formulas are in <code>src/model/rotation.js</code>.</li>
-      <li><strong>Stress test "Hotter and 20 % drier":</strong> every day 1.5 °C warmer and every rainfall 20 % smaller.</li>
-    </ul>
-    <h3>Words used on this page</h3>
-    <dl class="glossary">
-      <dt>Evapotranspiration (ET)</dt><dd>Water leaving the field: evaporated from the soil plus drawn up and released by plants. "Reference ET" is how much a well-watered grass field would lose in that weather.</dd>
-      <dt>Root-zone soil moisture</dt><dd>How wet the soil is in the top metre, where roots drink. 0% is bone dry, 100% is saturated.</dd>
-      <dt>NDVI</dt><dd>A satellite measure of how green and dense plants are. High on a growing crop, low on bare soil or stubble.</dd>
-      <dt>Satellite and model data versus ground measurements</dt><dd>Satellites and weather models cover the whole planet evenly but in coarse squares (here about 50 km). A rain gauge or soil probe in your field is more exact for that spot. Use both: this tool for the long pattern, your own records for the detail.</dd>
-      <dt>Legumes (nitrogen-fixing crops)</dt><dd>Peas, soybean, chickpea, vetch. Bacteria on their roots take nitrogen from the air, so they need little nitrogen fertiliser and leave some for the next crop.</dd>
-      <dt>Cover crops</dt><dd>Sown between cash crops to keep the soil covered. They protect against erosion, feed soil life and add organic matter, but they also use water.</dd>
-      <dt>Deep-rooting crops</dt><dd>Sunflower, rapeseed, sorghum. Their roots open channels that help water soak in and reach moisture other crops cannot.</dd>
-      <dt>Drought-tolerant crops</dt><dd>Crops such as sorghum or chickpea that keep yielding with less water or more heat, lowering the chance of a failed season.</dd>
+  <!-- How it works: plain language first, methodology and glossary behind it -->
+  <section data-step="how" class="step" hidden>
+    <div class="step-head">
+      <h2 tabindex="-1">How BioShift works</h2>
+      <p class="lead">BioShift replays the weather NASA recorded for your field since 2000 against your rotation and a few alternatives, and counts how often each would have been in trouble. It supports, it does not replace, your judgment or a local agronomist.</p>
+    </div>
+    <div class="how-grid">
+      <article class="how-card">
+        <h3>What data we use</h3>
+        <p>Daily weather NASA recorded for your area since 2000: temperature, rain, sunshine, wind and humidity. Plus the soil, terrain and crops you tell us.</p>
+      </article>
+      <article class="how-card">
+        <h3>How we estimate water-related yield losses</h3>
+        <p>We compare how much water your crop needed with how much water was in the soil, day by day through its season.</p>
+        <p class="src">Based on FAO crop-water and yield-response methods.</p>
+      </article>
+      <article class="how-card">
+        <h3>How reliable is the result?</h3>
+        <p>Each option carries a confidence level. It is Low when a crop setting is our assumption or your field is outside the latitudes the crop calendar was written for, and Medium when the water settings come from FAO tables. It is not a probability of success.</p>
+      </article>
+      <article class="how-card">
+        <h3>What are the main limits?</h3>
+        <p>The weather is a 50 km average, the past is not a forecast, prices are your estimate, and sowing and flowering months are typical for temperate Europe. Always review a change with a local agronomist.</p>
+      </article>
+    </div>
+
+    <details class="panel method" id="methodology">
+      <summary>Read the scientific methodology</summary>
+      <ul>
+        <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000 to 2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
+        <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
+        <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
+        <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
+        <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>
+        <li><strong>"Heatwave at flowering":</strong> 5 or more days above the crop's heat limit while it flowers.</li>
+        <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>
+        <li><strong>Cover crops you already sow:</strong> "Yes" replays your rotation with a cover crop in every long gap; "No" and "Sometimes" replay it with bare gaps.</li>
+        <li><strong>Yield in each replayed season:</strong> FAO-33 yield response, 1 − Ya/Ym = Ky × (1 − ETa/ETc), over the whole season from sowing to harvest. ETc is what the crop would use with enough water (crop coefficient × reference ET); ETa is what the daily water balance let it use. Ky values come from FAO Irrigation and Drainage Paper 66, Table 1 (which reprints Paper 33): winter wheat 1.05, maize 1.25, sunflower 0.95, sorghum 0.9, soybean 0.85, peas 1.15, alfalfa 1.1. Barley, rapeseed and chickpea are not in that table; their Ky is an assumption and labelled so. Only water shortage lowers yield; heat at flowering is counted separately. A fully irrigated field gets no water loss (irrigation water and its cost are not modelled).</li>
+        <li><strong>Money:</strong> profit per hectare = yield × your price − your five costs (seed, fertiliser, crop protection, machinery and fuel, labour). Starting values are examples for a rain-fed farm in South-East Romania, not market data. Whole-farm profit for each replayed year adds up every block: a rotation of N years on your farm is N equal blocks, each one year ahead of the next, so every crop is grown every year. "Normal year" is the median of the replayed years; "bad year" is the 20th percentile, the worst one year in five; "years with a loss" counts years below zero. It is your estimate, not a price or yield forecast. For the cover-crop option, the water the cover crop uses is counted, but its seed and sowing costs are not: add them to your costs if you compare it closely.</li>
+        <li><strong>Confidence meters (Weather, Soil, Money, Calendar):</strong> an answer under "Tell us more" raises only the area it changes. Weather stays Medium whatever you enter: one NASA grid cell, one rainfall source. Soil rises to Medium with a soil test, which adds notes to each option but does not change the water balance. Money rises to Medium when you enter your own price for every crop shown. Calendar rises to Medium when you enter your usual sowing month for every crop shown; those months change the plan dates only, not the replay. Machinery you own changes "Less work" and "Extra work"; pests you have seen add questions to the plan. Neither moves a meter.</li>
+        <li><strong>"Rarely suits your area":</strong> <span id="flag-rules"></span></li>
+        <li><strong>Your field outline and blocks:</strong> the outline you draw gives the farm size (area on the WGS84 sphere, the same formula as Leaflet.draw) and moves the weather point to its middle. Weather still comes from the NASA grid cell around it (about 50 km), so the outline changes the hectares, not the weather. Blocks start equal; the − and + buttons move 5 ha between blocks without changing the farm total. The map is not split; the blocks are a diagram.</li>
+        <li><strong>Your priorities:</strong> Higher profits (normal-year profit); Stable income (bad-year profit, lowered by the share of loss years); Less work (workload of each crop, plus half a step for each machine the farm does not use now); Healthier soil (legume years, soil covered when heavy rain falls, fewer bare months); Use less water (how often crops were short of water at flowering). Each priority is scaled 0 to 1 across the options shown and the picked priorities are averaged. Priorities only order the options; the alternatives themselves are found with the model weights under "Advanced settings", so the most profitable possible change may not be among them.</li>
+        <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 model score divided by ten and rounded.</li>
+        <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35° to 60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
+        <li><strong>Soil organic matter</strong> is a qualitative note from months of bare soil and cover crops, not a measurement or a score.</li>
+        <li><strong>Trends:</strong> Mann-Kendall test with Sen's slope on one value per year. "How sure: strong" means p is below 0.05; "weak" means p between 0.05 and 0.1; otherwise no trend is claimed.</li>
+        <li><strong>Weather history sentence:</strong> the month with the highest average of the chosen indicator over the record, and in how many years that month reached the two darkest shades.</li>
+        <li><strong>Heavy-rain days:</strong> days with 10 mm or more (the standard R10mm index).</li>
+        <li><strong>Crop table:</strong> <code>data/crops.json</code>. Crop coefficients, stage lengths, rooting depths and depletion fractions are FAO-56 table values. Sowing and flowering months, heat limits and return intervals are assumptions with low confidence, and are labelled as such.</li>
+        <li><strong>Scores:</strong> five 0 to 100 scores per rotation, each a count over replayed seasons or years, combined as a weighted average using the model weights. The formulas are in <code>src/model/rotation.js</code>.</li>
+        <li><strong>Stress test "Hotter and drier":</strong> every day 1.5 °C warmer and every rainfall 20 % smaller.</li>
+      </ul>
+    </details>
+
+    <div class="block-head">
+      <h3>Words used on this page</h3>
+      <label class="glossary-search" for="gloss-q">Search the glossary</label>
+      <input id="gloss-q" type="search" autocomplete="off" placeholder="For example: NDVI">
+    </div>
+    <dl class="glossary" id="glossary">
+      <div><dt>Evapotranspiration (ET)</dt><dd>Water leaving the field: evaporated from the soil plus drawn up and released by plants. "Reference ET" is how much a well-watered grass field would lose in that weather.</dd></div>
+      <div><dt>Root-zone soil moisture</dt><dd>How wet the soil is in the top metre, where roots drink. 0% is bone dry, 100% is saturated.</dd></div>
+      <div><dt>NDVI</dt><dd>A satellite measure of how green and dense plants are. High on a growing crop, low on bare soil or stubble.</dd></div>
+      <div><dt>Satellite and model data versus ground measurements</dt><dd>Satellites and weather models cover the whole planet evenly but in coarse squares (here about 50 km). A rain gauge or soil probe in your field is more exact for that spot. Use both: this tool for the long pattern, your own records for the detail.</dd></div>
+      <div><dt>Legumes (nitrogen-fixing crops)</dt><dd>Peas, soybean, chickpea, vetch. Bacteria on their roots take nitrogen from the air, so they need little nitrogen fertiliser and leave some for the next crop.</dd></div>
+      <div><dt>Cover crops</dt><dd>Sown between cash crops to keep the soil covered. They protect against erosion, feed soil life and add organic matter, but they also use water.</dd></div>
+      <div><dt>Deep-rooting crops</dt><dd>Sunflower, rapeseed, sorghum. Their roots open channels that help water soak in and reach moisture other crops cannot.</dd></div>
+      <div><dt>Drought-tolerant crops</dt><dd>Crops such as sorghum or chickpea that keep yielding with less water or more heat, lowering the chance of a failed season.</dd></div>
     </dl>
+    <p class="hint" id="gloss-none" hidden>No word matches. Try another search.</p>
     <div class="actions">
-      <a class="btn primary" href="#field">Check my field</a>
+      <a class="btn primary" href="#field">Analyze my field <span aria-hidden="true">→</span></a>
       <a href="#start">Back</a>
     </div>
   </section>

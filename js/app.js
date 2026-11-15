@@ -8,7 +8,7 @@ import { ribbon, cellText } from './ribbon.js';
 import { mannKendall } from '../src/model/trend.js';
 import { farmYears, moneySummary, equalBlocks } from '../src/model/money.js';
 import { GOALS, sortByGoals } from '../src/model/goals.js';
-import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
+import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, signed, moneyBlock } from './money-ui.js';
 import { loadFarm, saveFarm, clearFarm } from './store.js';
 import { moreInputs, applyMore, sanitizeMore, meters, farmNotes, AREAS } from './more-ui.js';
 import { areaConfidence } from '../src/model/confidence.js';
@@ -17,12 +17,19 @@ import { planHtml, planText, farmStrips } from './plan-ui.js';
 import { drawTool } from './draw.js';
 import { moveHectares } from '../src/model/plan.js';
 import { cropFlags, FLAG_RULES } from '../src/model/flags.js';
+import { HAZARDS } from './ribbon.js';
+import { troubleCount } from '../src/model/goals.js';
+import { HEAT_DAYS, STRESS_SHARE } from '../src/model/rotation.js';
+import { reason, extraWork } from './table.js';
+import { cropIcon, SOIL, TERRAIN, IRRIGATION as IRR_ICONS, GOAL_ICONS, SCENARIO_ICONS } from './icons.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const picked = (name) => document.querySelector(`input[name=${name}]:checked`).value;
-const setPicked = (name, value) => { const el = document.querySelector(`input[name=${name}][value="${value}"]`); if (el) el.checked = true; };
+// value may come from a shared link: matched against the radios, never put into a selector
+const setPicked = (name, value) => { const el = [...document.querySelectorAll(`input[name=${name}]`)].find((r) => r.value === value); if (el) el.checked = true; };
 const irrigated = () => picked('irrigation') !== 'none'; // "Sometimes" and "Fully" both count as irrigated
+const coverOn = () => picked('cover') === 'yes'; // "Sometimes" replays as bare gaps, so the cover option still shows what every-year cover changes
 const DEMO_CROPS = ['wheat', 'maize', 'sunflower'];
 const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '', blockSizes: {}, outline: null,
   more: { machines: [], pests: [], sow: {}, soil: {} } };
@@ -32,7 +39,8 @@ const DEMO_AREA = 120; // ha
 // the first crop of the rotation in this year; money and the plan both use it.
 const today = new Date();
 const START_YEAR_PLAN = today.getMonth() >= 8 ? today.getFullYear() + 1 : today.getFullYear();
-const area = () => { const v = parseFloat($('area').value); return v > 0 && v <= 100000 ? v : DEMO_AREA; };
+const areaOk = () => { const v = parseFloat($('area').value); return v >= 1 && v <= 100000; };
+const area = () => (areaOk() ? parseFloat($('area').value) : DEMO_AREA); // the fallback is announced by #area-err
 
 // ---------- steps ----------
 const STEPS = ['start', 'field', 'crops', 'priorities', 'options', 'plan', 'weather', 'agronomist', 'how'];
@@ -75,7 +83,7 @@ const draw = drawTool(map, {
   onArea: (ha) => {
     if (!(ha > 0)) return;
     $('area').value = Math.round(ha * 10) / 10;
-    $('draw-note').textContent = `Your field: ${Math.round(ha * 10) / 10} ha. Weather comes from NASA's grid for your area (about 50 km); the outline gives your farm size.`;
+    $('draw-note').textContent = `Your field: ${Math.round(ha * 10) / 10} ha, filled in as your farm size below.`;
     clearTimeout(drawTimer);
     drawTimer = setTimeout(() => { state.outline = draw.points; renderOptions(); }, 400); // re-run the money once dragging pauses
   },
@@ -87,7 +95,7 @@ function setOverlay() {
   const key = picked('layer'), def = LAYERS[key];
   if (overlay) { map.removeLayer(overlay); overlay = null; }
   $('ndvi-month-wrap').hidden = key !== 'ndvi';
-  $('layer-note').textContent = def ? def.note : 'Tap the map to move the field marker.';
+  $('layer-note').textContent = def ? def.note : 'Tap the map to place your field.';
   if (!def) return;
   const month = $('ndvi-month').value;
   const time = key === 'ndvi' && /^\d{4}-\d{2}$/.test(month) ? `${month}-01` : 'default';
@@ -217,7 +225,30 @@ function fact(label, series, unit, digits) {
 
 function renderRibbon() {
   if (!state.base) return;
-  $('ribbon').innerHTML = ribbon(state.base, layout({ crops: state.crops, cover: $('cover').checked }), picked('hazard'));
+  const lay = layout({ crops: state.crops, cover: coverOn() });
+  $('ribbon').innerHTML = ribbon(state.base, lay, picked('hazard'));
+  $('ribbon-story').textContent = ribbonStory(state.base, lay, picked('hazard'));
+}
+
+// One plain sentence read off the ribbon: the worst month on average for the chosen indicator, how
+// many years it reached the two darkest shades, and which of the farmer's crops flower then.
+const STORY = {
+  deficit: (m, a) => `${m} is the driest month for crops here: on average a well-watered crop would have needed ${Math.round(a)} mm more water than the rain brought.`,
+  heat: (m, a) => `${m} has the most very hot days (${HOT_DAY} °C or more): ${a.toFixed(1)} a year on average.`,
+  rain: (m, a) => `${m} brings the most heavy-rain days: ${a.toFixed(1)} a year on average.`,
+  frost: (m, a) => `${m} has the most frost days: ${a.toFixed(1)} a year on average.`,
+};
+function ribbonStory(mo, lay, key) {
+  const h = HAZARDS[key], N = mo.years.length;
+  const vals = (m) => mo.years.map((_, y) => h.value(mo.m[y * 12 + m]));
+  const avg = Array.from({ length: 12 }, (_, m) => vals(m).reduce((s, v) => s + v, 0) / N);
+  const top = avg.indexOf(Math.max(...avg));
+  if (!(avg[top] > 0)) return `No month in ${mo.years[0]}–${mo.years.at(-1)} had any of this here.`;
+  const name = monthName(top, mo.shift), bad = vals(top).filter((v) => v > h.cuts[2]).length;
+  const flowering = lay.feasible ? [...new Set(lay.crops)].filter((id) => CROPS[id].flower.includes(top + 1)).map((id) => CROPS[id].name) : [];
+  return `${STORY[key](name, avg[top])} It reached the two darkest shades in ${bad} of ${N} years. ${flowering.length
+    ? `${flowering.join(' and ')} ${flowering.length > 1 ? 'flower' : 'flowers'} then, so a bad ${name} costs ${flowering.length > 1 ? 'them' : 'it'} the most.`
+    : `None of your crops flowers in ${name}.`}`;
 }
 
 // W is the drawing width in CSS pixels, so the 14 px labels stay 14 px on a phone.
@@ -251,6 +282,7 @@ function renderClimate() {
   if (saved) notes.push(`Demo field: NASA POWER record saved on ${saved}, so it loads without a live connection to NASA.`);
   if (Math.abs(lat) < 35 || Math.abs(lat) > 60) notes.push('This point is outside the temperate latitudes (35°–60°) the crop calendar was written for. Sowing and flowering months may not match local practice, so treat the rotation results as illustrative only.');
   $('climate-note').textContent = notes.join(' ');
+  $('weather-eyebrow').textContent = `${placeText()} · ${y[0]}–${y.at(-1)}`;
   $('tiles').innerHTML = [
     fact(`Days of ${HOT_DAY} °C or more, per year`, s.series.hotDays, ' days', 1),
     fact(`Summer water shortfall (${monthName(5, mo.shift)}–${monthName(7, mo.shift)} crop demand minus rain)`, s.series.summerGap, ' mm', 0),
@@ -271,10 +303,6 @@ const WEIGHT_HINTS = {
   nitrogen: 'Legumes that fix nitrogen from the air',
 };
 // Step 3: farmer goals (up to two) set the order; the advanced sliders set the model weights.
-const GOAL_HINTS = {
-  profit: 'Profit in a normal year', steady: 'Profit in a bad year, and years with a loss', work: 'Workload and machinery you do not have yet',
-  soil: 'Legume years, soil covered in heavy rain, fewer bare months', water: 'How often crops were short of water at flowering',
-};
 const UNPICKED = 1, MAX_PICKS = 2;
 const IRRIGATION = { none: 'No irrigation', some: 'Sometimes', full: 'Fully irrigated' };
 
@@ -302,22 +330,72 @@ function renderFlags() {
   renderRotation();
 }
 
+// The rotation as a loop of crop cards: change, reorder (arrows or drag), remove, add.
 function renderRotation() {
-  const f = state.flags || {};
+  const f = state.flags || {}, n = state.crops.length;
   const options = (sel) => Object.entries(CROPS).map(([id, c]) => `<option value="${id}"${id === sel ? ' selected' : ''}>${esc(c.name)}${f[id] ? ' (rarely suits your area)' : ''}</option>`).join('');
-  $('rotation').innerHTML = state.crops.map((id, i) => `<div class="year-row"><span>Year ${i + 1}</span>
-    <select data-year="${i}" aria-label="Crop in year ${i + 1}">${options(id)}</select>
-    <button type="button" data-remove="${i}" aria-label="Remove year ${i + 1}"${state.crops.length === 1 ? ' disabled' : ''}>✕</button></div>`).join('');
-  $('add-year').disabled = state.crops.length >= MAX_YEARS;
+  $('rotation').innerHTML = state.crops.map((id, i) => `<li class="crop-card${f[id] ? ' flagged' : ''}" draggable="true" data-i="${i}">
+    <span class="year">Year ${i + 1}</span>
+    ${cropIcon(id)}
+    <label class="visually-hidden" for="crop-${i}">Crop in year ${i + 1}</label>
+    <select id="crop-${i}" data-year="${i}">${options(id)}</select>
+    ${f[id] ? '<span class="flag-badge">⚠ Rarely suits your area</span>' : ''}
+    <span class="card-tools">
+      <button type="button" data-move="${i}" data-dir="-1" aria-label="Move year ${i + 1} earlier"${i === 0 ? ' disabled' : ''}>←</button>
+      <button type="button" data-move="${i}" data-dir="1" aria-label="Move year ${i + 1} later"${i === n - 1 ? ' disabled' : ''}>→</button>
+      <button type="button" data-remove="${i}" aria-label="Remove year ${i + 1}"${n === 1 ? ' disabled' : ''}>✕</button>
+    </span></li>`).join('');
+  $('add-year').disabled = n >= MAX_YEARS;
+  $('add-year').querySelector('small').textContent = n >= MAX_YEARS ? `Up to ${MAX_YEARS} years` : '';
+  $('loop-note').textContent = n > 1 ? `After year ${n}, back to year 1` : 'The same crop every year';
   const flagged = state.crops.filter((id) => f[id]);
   $('rotation-flags').textContent = flagged.map((id) => `${CROPS[id].name} rarely suits your area: ${f[id].reason}.`).join(' ');
 }
 
+const moveCrop = (from, to) => {
+  if (from === to || to < 0 || to >= state.crops.length) return;
+  const next = state.crops.filter((_, k) => k !== from);
+  state.crops = [...next.slice(0, to), state.crops[from], ...next.slice(to)];
+  renderRotation(); renderOptions();
+};
+
+// Priority cards: farmer words on top, what each one actually ranks by underneath.
+const GOAL_UI = {
+  profit: ['Higher profits', 'Most profit in a normal year'],
+  steady: ['Stable income', 'Best bad year, fewest years with a loss'],
+  work: ['Less work', 'Lighter workload, no machinery you lack'],
+  soil: ['Healthier soil', 'Legume years, soil covered, fewer bare months'],
+  water: ['Use less water', 'Fewest seasons short of water at flowering'],
+};
+const ICONS = {
+  'soil-sandy': SOIL.sandy, 'soil-loam': SOIL.loam, 'soil-clay': SOIL.clay,
+  'terrain-flat': TERRAIN.flat, 'terrain-gentle': TERRAIN.gentle, 'terrain-steep': TERRAIN.steep,
+  'irr-none': IRR_ICONS.none, 'irr-some': IRR_ICONS.some, 'irr-full': IRR_ICONS.full,
+  'sc-now': SCENARIO_ICONS.now, 'sc-warm': SCENARIO_ICONS.warm, 'sc-dry': SCENARIO_ICONS.dry,
+};
+const STEP_NAMES = [['field', 'Your field'], ['crops', 'Your crops'], ['priorities', 'Priorities'], ['options', 'Results']];
+
+function renderGoalCount() {
+  const n = state.goals.length;
+  $('goal-count').textContent = `${n} of ${MAX_PICKS} priorities selected${n === MAX_PICKS ? '. Unselect one to pick another.' : ''}`;
+  for (const b of document.querySelectorAll('input[name=goal]')) b.closest('label').classList.toggle('locked', n >= MAX_PICKS && !b.checked);
+}
+
 function buildControls() {
+  for (const el of document.querySelectorAll('[data-ico]')) el.innerHTML = ICONS[el.dataset.ico] ?? '';
+  // Progress: earlier steps are links back (inputs are kept), the current one is marked.
+  for (const ol of document.querySelectorAll('.progress')) {
+    const at = +ol.dataset.at;
+    ol.setAttribute('aria-label', `Step ${at + 1} of 3`);
+    ol.innerHTML = STEP_NAMES.slice(0, 3).map(([id, t], i) => i < at
+      ? `<li class="done"><a href="#${id}"><b>✓</b>${t}</a></li>`
+      : `<li${i === at ? ' aria-current="step"' : ''}><span><b>${i + 1}</b>${t}</span></li>`).join('');
+  }
   $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${esc(c.name)}</label>`).join('');
   $('flag-rules').textContent = `A crop is flagged "rarely suits your area" when, replayed on its own on this field, it had ${Object.values(FLAG_RULES).map((r) => r.text).join('; or ')}. Heat alone is not flagged on a rain-fed field: the heat limits are assumptions. Flagged crops stay selectable.`;
-  $('prio').insertAdjacentHTML('beforeend', Object.entries(GOALS).map(([k, t]) => `<label><input type="checkbox" name="goal" value="${k}"${state.goals.includes(k) ? ' checked' : ''}>
-    <span>${esc(t)}<span class="src">${esc(GOAL_HINTS[k])}</span></span></label>`).join(''));
+  $('prio').insertAdjacentHTML('beforeend', Object.keys(GOALS).map((k) => `<label><input type="checkbox" name="goal" value="${k}"${state.goals.includes(k) ? ' checked' : ''}>
+    <span class="goal-ico">${GOAL_ICONS[k]}</span><span class="goal-t">${esc(GOAL_UI[k][0])}</span><span class="goal-d">${esc(GOAL_UI[k][1])}</span><span class="goal-check" aria-hidden="true">✓</span></label>`).join(''));
+  renderGoalCount();
   $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])} <output id="wo-${k}"></output>
     <span class="src">${esc(WEIGHT_HINTS[k])}</span>
     <input type="range" id="w-${k}" min="0" max="5" step="1" value="${UNPICKED}"></label>`).join('');
@@ -412,8 +490,8 @@ function ranked(current, allowed, ctx, weights) {
 
 function persist() {
   saveFarm({ lat: $('lat').value, lon: $('lon').value, soil: picked('soil'), slope: picked('slope'), irr: picked('irrigation'),
-    crops: state.crops, cover: $('cover').checked, livestock: $('livestock').checked, area: $('area').value,
-    econ: state.econ, goals: state.goals, notes: $('notes').value, outline: state.outline || null, blockSizes: state.blockSizes || {}, more: state.more });
+    crops: state.crops, cover: picked('cover'), livestock: $('livestock').checked, area: $('area').value,
+    econ: state.econ, goals: state.goals, notes: $('notes').value, outline: state.outline || null, blockSizes: state.blockSizes || {}, more: state.more, place: state.placeName || null });
   $('start-over-top').hidden = false;
 }
 
@@ -425,12 +503,13 @@ function applyFarm(f) {
   setPicked('soil', f.soil); setPicked('slope', f.slope); setPicked('irrigation', f.irr);
   const crops = (Array.isArray(f.crops) ? f.crops : []).filter((id) => id in CROPS).slice(0, MAX_YEARS);
   if (crops.length) state.crops = crops;
-  $('cover').checked = f.cover === true; $('livestock').checked = f.livestock === true;
+  setPicked('cover', f.cover === true ? 'yes' : f.cover); $('livestock').checked = f.livestock === true;
   if (+f.area > 0 && +f.area <= 100000) $('area').value = +f.area;
   state.econ = sanitizeEcon(f.econ);
   state.more = sanitizeMore(f.more);
   state.goals = (Array.isArray(f.goals) ? f.goals : []).filter((g) => g in GOALS).slice(0, MAX_PICKS);
   if (typeof f.notes === 'string') $('notes').value = f.notes.slice(0, 5000);
+  if (typeof f.place === 'string') state.placeName = f.place.slice(0, 80);
   const sizes = f.blockSizes && typeof f.blockSizes === 'object' ? f.blockSizes : {};
   state.blockSizes = Object.fromEntries(Object.entries(sizes).filter(([n, s]) => Array.isArray(s) && s.length === +n && s.every((v) => typeof v === 'number' && v >= 0)));
   if (Array.isArray(f.outline) && f.outline.length >= 3 && f.outline.length <= 200) {
@@ -440,24 +519,115 @@ function applyFarm(f) {
   $('start-over-top').hidden = false;
 }
 
+// ---------- results: header, top recommendation, stress comparison ----------
+const SOIL_NAMES = { sandy: 'Sandy soil', loam: 'Loamy soil', clay: 'Clay soil' };
+const SLOPE_NAMES = { flat: 'Flat', gentle: 'Gentle slope', steep: 'Steep slope' };
+const hemi = (v, pos, neg) => `${Math.abs(v).toFixed(2)}° ${v >= 0 ? pos : neg}`;
+const placeText = () => state.placeName || `Field at ${hemi(state.power.lat, 'N', 'S')}, ${hemi(state.power.lon, 'E', 'W')}`;
+
+function renderHead(mo, stressed) {
+  $('analysis-title').textContent = placeText();
+  const items = [`Recorded weather ${mo.years[0]}–${mo.years.at(-1)}`, SOIL_NAMES[picked('soil')], SLOPE_NAMES[picked('slope')], IRRIGATION[picked('irrigation')], `${Math.round(area())} ha`];
+  $('analysis-meta').innerHTML = items.map((t) => `<li>${esc(t)}</li>`).join('') +
+    `<li class="status-chip${stressed ? ' warn' : ''}">${stressed ? 'Stress test on' : '✓ Analysis ready'}</li>`;
+}
+
+const badOf = (ev) => { const t = troubleCount(ev, HEAT_DAYS, STRESS_SHARE); return { bad: t.total ? Math.round((26 * t.any) / t.total) : 0, t }; };
+// ▲/▼ against the baseline, in words too, so colour is never the only signal.
+function vsNow(v, base, higherBetter, fmt) {
+  const d = v - base, same = fmt === money ? Math.round(d / 100) === 0 : d === 0;
+  if (same) return '<span class="dl same">Same as now</span>';
+  const good = higherBetter ? d > 0 : d < 0;
+  return `<span class="dl ${good ? 'up' : 'down'}">${good ? '▲ Better' : '▼ Worse'}: ${fmt === money ? signed(d) : `${d > 0 ? '+' : '−'}${Math.abs(d)}`} vs now</span>`;
+}
+const tip = (label, text) => `<details class="tip"><summary aria-label="${esc(label)}: what it means">i</summary><p>${esc(text)}</p></details>`;
+
+function metric(label, value, compare, help) {
+  return `<div class="metric-card"><div class="mc-k">${esc(label)} ${tip(label, help)}</div><div class="mc-v num">${value}</div>${compare ? `<div class="mc-c">${compare}</div>` : ''}</div>`;
+}
+
+// The recommended sequence as crop chips; the changed year is marked in words and colour.
+function rotChips(c) {
+  const changed = (i) => (c.kind === 'swap' || c.kind === 'insert') && i === c.at;
+  return `<ol class="rot-chips" aria-label="${esc(rotName(c.rot))}">${c.rot.crops.map((id, i) => `<li class="${changed(i) ? 'changed' : ''}">
+    ${cropIcon(id, 'crop-ico sm')}<span><small>Year ${i + 1}</small>${esc(CROPS[id].name)}</span>${changed(i) ? '<em>New</em>' : ''}</li>`).join('')}
+    <li class="loop" aria-hidden="true">↻</li></ol>${c.rot.cover ? '<p class="cover-tag">+ Cover crops sown in the long bare gaps</p>' : ''}`;
+}
+
+function topPick(top, now, ctx) {
+  const t = explain(top, now.ev, ctx), alt = Boolean(top.kind), n = top.money.n;
+  const b = badOf(top.ev).bad, b0 = badOf(now.ev).bad;
+  const { level, short, reasons } = t.confidence;
+  const work = extraWork(top, now.rot, state.more.machines).text;
+  const metrics = [
+    metric('Bad seasons, of 26', `${b}`, alt ? vsNow(b, b0, false) : '', 'Crop seasons with a heatwave or a water shortage at flowering, replayed on recorded weather and scaled to 26 seasons.'),
+    metric('Profit, normal year', money(top.money.normal), alt ? vsNow(top.money.normal, now.money.normal, true, money) : '', 'Whole-farm profit in the middle replayed year, with your prices and costs (example values until you change them). An estimate, not a forecast.'),
+    metric('Profit, bad year', money(top.money.bad), alt ? vsNow(top.money.bad, now.money.bad, true, money) : '', 'Whole-farm profit in the worst one year in five of the replay.'),
+    metric('Years with a loss', `${top.money.lossYears} of ${n}`, alt ? vsNow(top.money.lossYears, now.money.lossYears, false) : '', 'Replayed years in which the whole farm would have lost money with your prices and costs.'),
+  ].join('');
+  const goalText = state.goals.length ? state.goals.map((g) => GOAL_UI[g][0].toLowerCase()).join(' and ') : 'the five model scores';
+  return `<article class="top-card${alt ? '' : ' holds'}" aria-labelledby="top-title">
+    <div class="top-main">
+      <p class="top-label">${alt ? 'Top recommendation' : 'Your current rotation'} · ${state.goals.length ? `best match for ${esc(goalText)}` : 'ranked on all five model scores'}</p>
+      <h3 id="top-title">${alt ? esc(t.title) : 'Your current rotation holds up best'}</h3>
+      <p class="top-sub">${esc(!alt ? `None of the alternatives beats what you grow now on ${goalText}. The comparison below shows how close they come.`
+        : state.goals.length ? reason(top, now, state.goals, state.more.machines) : `${change(top)}.`)}</p>
+      ${rotChips(top)}
+      ${alt ? `<p class="top-was">Now: ${esc(rotName(now.rot))}</p>` : ''}
+    </div>
+    <div class="metric-grid">${metrics}</div>
+    <div class="top-why">
+      <h4>${alt ? 'Why this option' : 'What the replay shows'}</h4>
+      <ul class="reasons">${[t.key, ...t.why].slice(0, 4).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      ${alt ? `<p class="hint">Extra work: ${esc(work.toLowerCase())}.</p>` : ''}
+    </div>
+    <div class="top-foot">
+      <div class="conf-line"><span class="badge ${level.toLowerCase()}">Confidence: ${level}</span> <span class="hint">${esc(short)}</span>
+        <details class="tip"><summary aria-label="What confidence means">i</summary><p>${esc(reasons.join(' '))} Confidence says how solid the inputs are. It is not a probability that this option succeeds.</p></details></div>
+      <div class="top-actions">
+        <a class="btn primary" href="#plan" data-plan="0">${alt ? 'Explore this recommendation' : 'See your plan'} <span aria-hidden="true">→</span></a>
+        <button type="button" class="btn" data-jump="cmp-h">Compare all options</button>
+        <a class="btn ghost" href="#agronomist" data-pick="0">Share with an agronomist</a>
+      </div>
+    </div>
+  </article>`;
+}
+
+// After a scenario: the current rotation and the scenario's first option, recorded weather against scenario.
+function stressCompare(current, allowed, ctx, weights, options, now) {
+  const base = ranked(current, allowed, { ...ctx, mo: state.base, clim: summarize(state.base).clim }, weights);
+  const top = options[0], match = (list, c) => list.find((o) => rotName(o.rot) === rotName(c.rot));
+  const rows = [[now, base.now], ...(top.kind ? [[top, match(base.options, top)]] : [])];
+  const cell = (was, is, fmt, higherBetter) => (was == null ? `<b>${fmt(is)}</b>` : `${fmt(was)} → <b>${fmt(is)}</b> ${vsNow(is, was, higherBetter, fmt === money ? money : null).replace(' vs now', '')}`);
+  const flips = rotName(base.options[0].rot) !== rotName(top.rot);
+  return `<p class="stress-verdict ${flips ? 'flip' : 'hold'}">${flips
+    ? `<b>The best option changes.</b> On recorded weather ${esc(title(base.options[0]).title.toLowerCase())} came first; in this scenario ${esc(title(top).title.toLowerCase())} does.`
+    : `<b>The best option holds.</b> ${esc(title(top).title)} still comes first.`}</p>
+    <div class="table-scroll"><table class="stress-table"><thead><tr><th scope="col">Option</th><th scope="col">Bad seasons, of 26: recorded → scenario</th><th scope="col">Profit, normal year: recorded → scenario</th></tr></thead><tbody>${
+    rows.map(([s, b]) => `<tr><th scope="row">${esc(title(s).title)}</th><td>${cell(b && badOf(b.ev).bad, badOf(s.ev).bad, (v) => `${v}`, false)}</td><td>${cell(b && b.money.normal, s.money.normal, money, true)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="src">Same 26 years, adjusted day by day. "Worse" here means worse than on the recorded weather.</p>`;
+}
+
 function renderOptions() {
   if (!state.power) return;
+  $('area-err').hidden = areaOk();
   const rainPct = +$('sc-rain').value, dT = +$('sc-temp').value;
   $('rain-out').textContent = rainPct ? `${rainPct > 0 ? '+' : '−'}${Math.abs(rainPct)}%` : 'no change';
   $('temp-out').textContent = dT ? `+${dT} °C` : 'no change';
   for (const b of document.querySelectorAll('#stress button')) b.setAttribute('aria-pressed', +b.dataset.rain === rainPct && +b.dataset.temp === dT);
   const note = $('scenario-note');
   note.hidden = !(rainPct || dT);
-  note.textContent = `Stress test on: rainfall ${$('rain-out').textContent}, temperature ${$('temp-out').textContent}. Scores below use the adjusted weather.`;
+  note.textContent = `Stress test on: rainfall ${$('rain-out').textContent}, temperature ${$('temp-out').textContent}. Every number on this page uses the adjusted weather. Pick "Current" under the climate test to go back.`;
 
   renderRibbon(); // the crop bands on the ribbon follow the rotation
-  const current = { crops: state.crops, cover: $('cover').checked }, lay = layout(current);
+  const current = { crops: state.crops, cover: coverOn() }, lay = layout(current);
   const wet = irrigated();
   $('irr-echo').textContent = IRRIGATION[picked('irrigation')];
   state.result = null;
   if (!lay.feasible) {
     const i = lay.clash[0], a = CROPS[state.crops[i]].name, b = CROPS[state.crops[(i + 1) % state.crops.length]].name;
-    $('answer').textContent = ''; $('ranking').innerHTML = ''; $('farm-strips').innerHTML = '';
+    $('top-pick').innerHTML = `<div class="empty"><p class="warn">Your rotation does not fit the calendar: ${esc(b)} has to be sown before ${esc(a)} is harvested.</p><a class="btn primary" href="#crops">Change your rotation</a></div>`;
+    $('ranking').innerHTML = ''; $('farm-strips').innerHTML = ''; $('stress-result').innerHTML = '';
     $('cards').innerHTML = `<p class="warn">This order does not fit the calendar: ${esc(b)} has to be sown before ${esc(a)} is harvested. <a href="#crops">Change one of them</a>, or put another crop between them.</p>`;
     return;
   }
@@ -474,17 +644,9 @@ function renderOptions() {
   const allowed = [...document.querySelectorAll('#allowed input:checked')].map((i) => i.value)
     .filter((id) => id in CROPS && ($('livestock').checked || !CROPS[id].forage));
   const { options, now } = ranked(current, allowed, ctx, weights), top = options[0];
-  if (rainPct || dT) {
-    // Stress test: say whether the adjusted weather changes which option comes first.
-    const was = rotName(ranked(current, allowed, { ...ctx, mo: state.base, clim: summarize(state.base).clim }, weights).options[0].rot), is = rotName(top.rot);
-    note.textContent += was === is
-      ? ` The order holds: ${is} still comes first.`
-      : ` The order flips: on the recorded weather ${was} came first; in this scenario ${is} does.`;
-  }
-  const goalText = state.goals.length ? state.goals.map((g) => GOALS[g].toLowerCase()).join(' and ') : 'the five model scores';
-  $('answer').textContent = top.kind
-    ? `Best match for ${goalText}: ${change(top).replace(/^./, (m) => m.toLowerCase())}.`
-    : `For ${goalText}, none of the alternatives beats what you grow now.`;
+  renderHead(mo, rainPct || dT);
+  $('top-pick').innerHTML = topPick(top, now, ctx);
+  $('stress-result').innerHTML = rainPct || dT ? stressCompare(current, allowed, ctx, weights, options, now) : '';
   $('ranking').innerHTML = decisionTable(options, now, state.goals, state.more.machines);
   $('farm-strips').innerHTML = `<p class="hint">Your ${Math.round(area())} ha in ${START_YEAR_PLAN} with ${top.kind ? 'the best match' : 'what you grow now'}: one block per year of the rotation.</p>${farmStrips(top, blocksFor(top.rot.crops.length), START_YEAR_PLAN)}
     <p><a class="card-plan" href="#plan" data-plan="0">See the plan, season by season →</a></p>`;
@@ -543,7 +705,7 @@ function renderPlan() {
 // Field state for a shared link; read back by restore() on load.
 function shareUrl() {
   const q = new URLSearchParams({ lat: $('lat').value, lon: $('lon').value, soil: picked('soil'), slope: picked('slope'),
-    irr: picked('irrigation'), crops: state.crops.join(','), cover: $('cover').checked ? 1 : 0 });
+    irr: picked('irrigation'), crops: state.crops.join(','), cover: picked('cover') });
   return `${location.origin}${location.pathname}#options?${q}`;
 }
 
@@ -555,7 +717,7 @@ function restore() {
   setPicked('soil', q.get('soil')); setPicked('slope', q.get('slope')); setPicked('irrigation', q.get('irr'));
   const crops = (q.get('crops') ?? '').split(',').filter((id) => id in CROPS).slice(0, MAX_YEARS);
   if (crops.length) state.crops = crops;
-  $('cover').checked = q.get('cover') === '1';
+  setPicked('cover', q.get('cover') === '1' ? 'yes' : q.get('cover'));
   history.replaceState(null, '', `#${stepId()}`);
   return true;
 }
@@ -584,7 +746,7 @@ function renderReport() {
 
 // ---------- events ----------
 window.addEventListener('hashchange', () => { if (restore()) { renderRotation(); loadField(); } show(); });
-const loadDemo = () => { state.crops = DEMO_CROPS; $('area').value = DEMO_AREA; renderRotation(); return setField(DEMO.lat, DEMO.lon, 7); };
+const loadDemo = () => { state.crops = DEMO_CROPS; state.placeName = 'Bărăgan Plain, Romania'; $('area').value = DEMO_AREA; renderRotation(); return setField(DEMO.lat, DEMO.lon, 7); };
 $('see-example').addEventListener('click', loadDemo);
 $('l-plan').addEventListener('click', () => { state.planKey = state.landingPick; loadDemo(); });
 $('place').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchPlace, 500); });
@@ -592,6 +754,7 @@ $('place-results').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;
   $('place').value = b.textContent; $('place-results').innerHTML = '';
+  state.placeName = b.textContent.split(',')[0];
   setField(b.dataset.lat, b.dataset.lon, 10);
 });
 $('locate').addEventListener('click', () => {
@@ -599,15 +762,15 @@ $('locate').addEventListener('click', () => {
   if (!navigator.geolocation) { status.className = 'error'; status.textContent = 'This browser cannot share a location. Search for a place or tap the map.'; return; }
   status.className = ''; status.textContent = 'Finding your location…';
   navigator.geolocation.getCurrentPosition(
-    (pos) => setField(pos.coords.latitude, pos.coords.longitude, 10),
+    (pos) => { state.placeName = 'Your location'; setField(pos.coords.latitude, pos.coords.longitude, 10); },
     () => { status.className = 'error'; status.textContent = 'Could not get your location. Search for a place or tap the map.'; },
     { timeout: 10000 });
 });
 document.querySelector('.presets').addEventListener('click', (e) => {
   const b = e.target.closest('button');
-  if (b) setField(b.dataset.lat, b.dataset.lon, 7);
+  if (b) { state.placeName = b.textContent; setField(b.dataset.lat, b.dataset.lon, 7); }
 });
-map.on('click', (e) => { if (draw.active) return; const p = e.latlng.wrap(); setField(p.lat, p.lng); });
+map.on('click', (e) => { if (draw.active) return; const p = e.latlng.wrap(); state.placeName = null; setField(p.lat, p.lng); });
 // Draw your field: the outline sets the farm size and moves the weather point to its middle.
 const showDrawing = (on) => { $('draw-start').hidden = on; $('draw-done').hidden = !on; $('draw-clear').hidden = !on && !draw.points.length; };
 $('draw-start').addEventListener('click', () => { draw.start(); showDrawing(true); $('draw-note').textContent = 'Tap each corner of your field on the map. Drag a corner to adjust. Then tap Done.'; });
@@ -616,7 +779,7 @@ $('draw-done').addEventListener('click', () => {
   showDrawing(false);
 });
 $('draw-clear').addEventListener('click', () => { draw.clear(); state.outline = null; showDrawing(false); persist(); $('draw-note').textContent = 'Outline cleared. Type the size below, or draw again.'; });
-for (const id of ['lat', 'lon']) $(id).addEventListener('change', loadField);
+for (const id of ['lat', 'lon']) $(id).addEventListener('change', () => { state.placeName = null; loadField(); });
 $('layers').addEventListener('change', setOverlay);
 $('hazard').addEventListener('change', renderRibbon);
 for (const type of ['click', 'mouseover']) {
@@ -631,20 +794,53 @@ $('rotation').addEventListener('change', (e) => {
   renderOptions();
 });
 $('rotation').addEventListener('click', (e) => {
-  if (e.target.dataset.remove == null || state.crops.length === 1) return;
-  state.crops = state.crops.filter((_, i) => i !== +e.target.dataset.remove);
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.move != null) {
+    const from = +b.dataset.move, to = from + +b.dataset.dir;
+    moveCrop(from, to);
+    $('rotation').querySelector(`[data-move="${to}"][data-dir="${b.dataset.dir}"]:not(:disabled)`)?.focus(); // keep focus on the moved card
+    return;
+  }
+  if (b.dataset.remove == null || state.crops.length === 1) return;
+  state.crops = state.crops.filter((_, i) => i !== +b.dataset.remove);
   renderRotation(); renderOptions();
 });
+// Drag to reorder (mouse); the arrow buttons do the same for keyboard and touch.
+$('rotation').addEventListener('dragstart', (e) => {
+  const li = e.target.closest?.('[data-i]');
+  if (!li) return;
+  state.dragFrom = +li.dataset.i; li.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', li.dataset.i);
+});
+$('rotation').addEventListener('dragover', (e) => { if (state.dragFrom != null) e.preventDefault(); });
+$('rotation').addEventListener('drop', (e) => {
+  const li = e.target.closest('[data-i]');
+  if (!li || state.dragFrom == null) return;
+  e.preventDefault(); moveCrop(state.dragFrom, +li.dataset.i); state.dragFrom = null;
+});
+$('rotation').addEventListener('dragend', () => { state.dragFrom = null; for (const li of $('rotation').children) li.classList.remove('dragging'); });
 $('add-year').addEventListener('click', () => {
   if (state.crops.length >= MAX_YEARS) return;
   state.crops = [...state.crops, 'wheat'];
   renderRotation(); renderOptions();
+  $(`crop-${state.crops.length - 1}`)?.focus(); // straight into choosing the new year's crop
 });
 $('prio').addEventListener('change', (e) => {
   const boxes = [...document.querySelectorAll('input[name=goal]')];
   if (boxes.filter((b) => b.checked).length > MAX_PICKS) e.target.checked = false;
   state.goals = boxes.filter((b) => b.checked).map((b) => b.value);
-  renderOptions(); persist();
+  renderGoalCount(); renderOptions(); persist();
+});
+document.addEventListener('click', (e) => { // in-page jumps: the hash drives the steps, so these scroll instead
+  const b = e.target.closest('[data-jump]');
+  if (b) $(b.dataset.jump)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+});
+$('gloss-q').addEventListener('input', () => {
+  const q = $('gloss-q').value.trim().toLowerCase();
+  let shown = 0;
+  for (const item of $('glossary').children) { const hit = !q || item.textContent.toLowerCase().includes(q); item.hidden = !hit; shown += hit; }
+  $('gloss-none').hidden = shown > 0;
 });
 $('weights').addEventListener('input', renderOptions);
 $('costs').addEventListener('input', (e) => {
@@ -672,14 +868,17 @@ $('stress').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;
   $('sc-rain').value = b.dataset.rain; $('sc-temp').value = b.dataset.temp;
-  renderOptions();
+  // The replay takes a few hundred ms: show that it is working, let the browser paint, then run it.
+  $('stress').setAttribute('aria-busy', 'true'); b.classList.add('busy');
+  $('stress-result').innerHTML = '<p class="hint" role="status">Replaying 26 years with this climate…</p>';
+  requestAnimationFrame(() => setTimeout(() => { renderOptions(); $('stress').removeAttribute('aria-busy'); b.classList.remove('busy'); }));
 });
 for (const id of ['sc-rain', 'sc-temp']) $(id).addEventListener('input', renderOptions);
-for (const id of ['cover', 'livestock', 'allowed']) $(id).addEventListener('change', renderOptions);
+for (const id of ['cover-q', 'livestock', 'allowed']) $(id).addEventListener('change', renderOptions);
 for (const name of ['soil', 'slope', 'irrigation']) for (const el of document.querySelectorAll(`input[name=${name}]`)) el.addEventListener('change', renderOptions);
-$('cards').addEventListener('click', (e) => { if (e.target.dataset.pick != null) $('pick').value = e.target.dataset.pick; });
+for (const id of ['cards', 'top-pick']) $(id).addEventListener('click', (e) => { const a = e.target.closest('[data-pick]'); if (a) $('pick').value = a.dataset.pick; });
 $('pick').addEventListener('change', renderReport);
-for (const id of ['ranking', 'cards', 'farm-strips']) {
+for (const id of ['ranking', 'cards', 'farm-strips', 'top-pick']) {
   $(id).addEventListener('click', (e) => { // a row or card opens that option's plan
     const a = e.target.closest('[data-plan]');
     if (a) state.planIndex = +a.dataset.plan;
