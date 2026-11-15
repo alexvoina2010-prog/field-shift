@@ -28,7 +28,8 @@ saved in `data/demo_field.json`.
 | Whole rotation, seasons short of water at flowering | 43 of 77 crop seasons now, 40 of 77 with the chickpea swap | Sum over the three crops of the rotation, best-match card evidence |
 | Wheat after chickpea | Short of water in 7 of 25 seasons, against 10 of 25 after sunflower | Same rule, May–June |
 | Overall score at default priorities | 51 of 100 now, 61 of 100 with the chickpea swap | Equal weights on all sub-scores; a score for comparing options, not a yield |
-| Stress test | At +1.5 °C and 20% less rain the ranking holds: 5 of 10 against 4 of 10 | Same replay on the perturbed record, options screen |
+| Stress test | At +1.5 °C and 20% less rain the ranking holds: bad seasons 20 → 23 now, 19 → 23 with the chickpea swap (read 15 Nov, 22:10) | Same replay on the perturbed record, options screen |
+| The water balance agrees with NASA's soil model | Correlation 0.96 with POWER GWETROOT over 312 months (0.93 anomalies, 0.95 summer anomalies); driest summers 2000, 2001, 2024 in both top fives | `node scripts/check_gwetroot.mjs`; same MERRA-2 rain drives both, so it checks the bucket, not the rain |
 
 ## Money on the demo farm (120 ha, example prices and costs, 2026-11-15)
 

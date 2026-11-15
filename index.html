@@ -40,7 +40,7 @@
       <ol class="journey" aria-label="How it works in three steps">
         <li><b>1</b><span>Your field</span></li>
         <li><b>2</b><span>Your crops</span></li>
-        <li><b>3</b><span>Your recommendations</span></li>
+        <li><b>3</b><span>Your options compared</span></li>
       </ol>
     </div>
     <div class="hero-side">
@@ -209,7 +209,7 @@
       <div id="weights"></div>
     </details>
     <div class="actions">
-      <a class="btn primary" href="#options">Show my recommendations <span aria-hidden="true">→</span></a>
+      <a class="btn primary" href="#options">Compare my options <span aria-hidden="true">→</span></a>
       <a href="#crops">Back</a>
     </div>
   </section>
@@ -438,6 +438,7 @@
         <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
         <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
         <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
+        <li><strong>Check against NASA's own soil model:</strong> on the demo field, the water balance's monthly root-zone water follows NASA POWER's root-zone soil wetness (GWETROOT, from the MERRA-2 land model) closely: correlation 0.96 over 312 months, 0.93 once the normal seasonal cycle is removed, and 3 of the 5 driest summers are the same years (2000, 2001, 2024). Both start from the same MERRA-2 rainfall, so this checks how the water balance behaves, not whether the rain is right. Script: <code>scripts/check_gwetroot.mjs</code>.</li>
         <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>
         <li><strong>"Heatwave at flowering":</strong> 5 or more days above the crop's heat limit while it flowers.</li>
         <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>

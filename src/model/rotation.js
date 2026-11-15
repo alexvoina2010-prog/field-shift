@@ -68,7 +68,9 @@ export function layout(rot) {
 // what happened during its flowering months.
 // shortcut: TAW switches to each new crop's rooting depth and p is not adjusted for daily ETc;
 // upgrade to a layered soil profile if rooting-depth differences start driving the ranking.
-export function backtest(lay, mo, soil) {
+// trace (optional array): filled with monthly mean relative soil water, 1 - dr/TAW, at index o * months + t
+// (used only by scripts/check_gwetroot.mjs to compare the bucket with POWER's GWETROOT).
+export function backtest(lay, mo, soil, trace) {
   const awc = SOIL_AWC[soil], S = 25400 / CURVE_NUMBER[soil] - 254, ia = 0.2 * S;
   const N = lay.slots.length, T = mo.m.length;
   const seasons = lay.len.map(() => []);
@@ -92,6 +94,7 @@ export function backtest(lay, mo, soil) {
         const rain = m.rainD[j], runoff = rain > ia ? (rain - ia) ** 2 / (rain + 0.8 * S) : 0;
         const ks = dr <= p * taw ? 1 : (taw - dr) / ((1 - p) * taw);
         dr = Math.min(taw, Math.max(0, dr - (rain - runoff) + ks * kc * m.et0D[j]));
+        if (trace) trace[o * T + t] = (trace[o * T + t] || 0) + (1 - dr / taw) / m.days;
         if (run) { run.etc = (run.etc || 0) + kc * m.et0D[j]; run.eta = (run.eta || 0) + ks * kc * m.et0D[j]; } // ETc and ETa, whole season
         if (!flowering) continue;
         run.days++; run.ksSum += ks; run.rain += rain; run.tmaxSum += m.tmax[j];

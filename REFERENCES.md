@@ -4,7 +4,7 @@
 
 | Dataset | Used for | How accessed |
 |---|---|---|
-| NASA POWER daily point API v2.10.3, community AG (MERRA-2 meteorology, CERES SYN1deg and GEWEX SRB radiation): T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, WS2M, T2MDEW, 2000–2025 (GWETROOT is also requested but not used in any result) | Weather record replayed by the backtest; climate tiles | Live in the browser for any clicked point; saved to `data/demo_field.json` for the demo field by `scripts/fetch_demo.mjs` |
+| NASA POWER daily point API v2.10.3, community AG (MERRA-2 meteorology, CERES SYN1deg and GEWEX SRB radiation): T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, WS2M, T2MDEW, 2000–2025 (GWETROOT is not used in any score; `scripts/check_gwetroot.mjs` compares it with the water balance: r = 0.96 monthly, 0.93 anomalies, demo field) | Weather record replayed by the backtest; climate tiles | Live in the browser for any clicked point; saved to `data/demo_field.json` for the demo field by `scripts/fetch_demo.mjs` |
 | NASA GIBS WMTS: `MODIS_Terra_L3_NDVI_Monthly` | Vegetation map layer | Live tiles |
 | NASA GIBS WMTS: `SMAP_L4_Analyzed_Root_Zone_Soil_Moisture` | Soil moisture map layer | Live tiles |
 | NASA GIBS WMTS: `IMERG_Precipitation_Rate` | Rainfall map layer | Live tiles |

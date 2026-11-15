@@ -5,7 +5,8 @@
 const R = 6378137; // WGS84 equatorial radius, m
 
 /**
- * Area of a polygon on the sphere, m² (the same spherical-excess formula Leaflet.draw uses).
+ * Area of a polygon on the sphere, m². Adapted from Leaflet.draw's L.GeometryUtil.geodesicArea
+ * (MIT licence, Copyright 2012-2017 Jon West, Jacob Toye and Leaflet; https://github.com/Leaflet/Leaflet.draw).
  * @param {{lat:number, lng:number}[]} pts
  */
 export function geodesicArea(pts) {

@@ -23,6 +23,7 @@ BioShift was built by one person, Alex, for the 2026 NASA Space Apps Challenge (
 ## What AI did not do
 
 - **No AI runs inside the app.** Every result comes from NASA data and published formulas (FAO-56, FAO-33/66, USDA TR-55, Mann-Kendall). There is no chatbot and no model call.
+- **Demo video:** a screen recording of the real app with title cards and subtitles. Claude Code wrote the recording and editing scripts (`demo/`, Playwright and ffmpeg) and the card text; every frame carries an "AI-generated media" label. No generated imagery, voice or audio.
 - **No AI-generated photographs, video, audio or voice** are in the app. The one photograph is a credited Wikimedia Commons image (CC BY-SA 4.0).
 - **No NASA logos, insignia or mission identifiers** were generated, used or modified.
 

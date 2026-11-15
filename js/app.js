@@ -569,7 +569,7 @@ function topPick(top, now, ctx) {
   const goalText = state.goals.length ? state.goals.map((g) => GOAL_UI[g][0].toLowerCase()).join(' and ') : 'the five model scores';
   return `<article class="top-card${alt ? '' : ' holds'}" aria-labelledby="top-title">
     <div class="top-main">
-      <p class="top-label">${alt ? 'Top recommendation' : 'Your current rotation'} · ${state.goals.length ? `best match for ${esc(goalText)}` : 'ranked on all five model scores'}</p>
+      <p class="top-label">${alt ? 'Best match on the replay' : 'Your current rotation'} · ${state.goals.length ? `best match for ${esc(goalText)}` : 'ranked on all five model scores'}</p>
       <h3 id="top-title">${alt ? esc(t.title) : 'Your current rotation holds up best'}</h3>
       <p class="top-sub">${esc(!alt ? `None of the alternatives beats what you grow now on ${goalText}. The comparison below shows how close they come.`
         : state.goals.length ? reason(top, now, state.goals, state.more.machines) : `${change(top)}.`)}</p>
@@ -586,7 +586,7 @@ function topPick(top, now, ctx) {
       <div class="conf-line"><span class="badge ${level.toLowerCase()}">Confidence: ${level}</span> <span class="hint">${esc(short)}</span>
         <details class="tip"><summary aria-label="What confidence means">i</summary><p>${esc(reasons.join(' '))} Confidence says how solid the inputs are. It is not a probability that this option succeeds.</p></details></div>
       <div class="top-actions">
-        <a class="btn primary" href="#plan" data-plan="0">${alt ? 'Explore this recommendation' : 'See your plan'} <span aria-hidden="true">→</span></a>
+        <a class="btn primary" href="#plan" data-plan="0">${alt ? 'Explore this option' : 'See your plan'} <span aria-hidden="true">→</span></a>
         <button type="button" class="btn" data-jump="cmp-h">Compare all options</button>
         <a class="btn ghost" href="#agronomist" data-pick="0">Share with an agronomist</a>
       </div>
