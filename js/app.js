@@ -423,8 +423,8 @@ function renderReport() {
     <p class="key">${esc(t.key)}</p>
     <h3>Check for this option</h3>${box(t.risks.length ? t.risks : [NO_RISK])}
     <h3>What the tool can't see</h3>${box(shared)}
-    <p class="src">Field Shift compares options on recorded weather. It supports, it does not replace, your judgment or a local agronomist. Counts are seasons out of trouble, not yields.</p>`;
-  const text = `Field Shift, my field at ${lat.toFixed(2)}, ${lon.toFixed(2)}. Now: ${rotName(r.now.rot)} (${seasonsOk(r.now)}). ` +
+    <p class="src">BioShift compares options on recorded weather. It supports, it does not replace, your judgment or a local agronomist. Counts are seasons out of trouble, not yields.</p>`;
+  const text = `BioShift, my field at ${lat.toFixed(2)}, ${lon.toFixed(2)}. Now: ${rotName(r.now.rot)} (${seasonsOk(r.now)}). ` +
     `Option to discuss: ${t.title} (${seasonsOk(c)}). ${t.key}. A comparison on NASA weather ${r.ctx.mo.years[0]}–${r.ctx.mo.years.at(-1)}, not advice. ${shareUrl()}`;
   $('whatsapp').href = `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

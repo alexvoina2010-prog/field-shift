@@ -1,4 +1,4 @@
-# Field Shift
+# BioShift
 
 A decision-support tool for the 2026 NASA Space Apps Challenge, **"Field Shift: Adapting Farms with NASA Data"**.
 

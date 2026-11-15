@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Field Shift: crop rotations with NASA data</title>
+  <title>BioShift: crop rotations with NASA data</title>
   <meta name="description" content="Compare crop rotation options for your field using 26 years of NASA climate data.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="#start">Field Shift</a>
+  <a class="brand" href="#start">BioShift</a>
   <a href="#how">How it works</a>
 </header>
 <p id="status" role="status" aria-live="polite"></p>
@@ -21,6 +21,7 @@
     <p class="eyebrow" id="l-eyebrow">Tested on NASA weather</p>
     <h1 id="l-head" tabindex="-1">A farm near Slobozia grows wheat → maize → sunflower.</h1>
     <p class="l-swap" id="l-swap"></p>
+    <p class="hint">Not a forecast and not a recommendation: a replay of what NASA recorded.</p>
     <div class="actions">
       <a class="btn primary" href="#field">Check my field</a>
       <a href="#options" id="see-example">See the full example</a>
@@ -226,11 +227,11 @@
   <!-- How it works: method, limits, glossary -->
   <section data-step="how" class="narrow" hidden>
     <h2 tabindex="-1">How it works</h2>
-    <p>Field Shift replays the weather NASA recorded for your field since 2000 against your rotation and a few alternatives, and counts how often each would have been in trouble. It supports, it does not replace, your judgment or a local agronomist.</p>
+    <p>BioShift replays the weather NASA recorded for your field since 2000 against your rotation and a few alternatives, and counts how often each would have been in trouble. It supports, it does not replace, your judgment or a local agronomist.</p>
     <h3>Data and method</h3>
     <ul>
-      <li><strong>Climate:</strong> NASA POWER daily data 2000–2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's MERRA-2 and CERES products.</li>
-      <li><strong>Map layers:</strong> NASA GIBS: MODIS Terra NDVI (monthly), SMAP Level-4 root-zone soil moisture, GPM IMERG precipitation rate.</li>
+      <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000–2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
+      <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
       <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
       <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
       <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>

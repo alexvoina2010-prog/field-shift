@@ -21,6 +21,18 @@ Planned, not yet used: GPM IMERG monthly totals as a rainfall cross-check; eleva
 
 Parameters with no citation (sowing and flowering months, heat limits, return intervals, nitrogen credits, cover-crop and bare-soil coefficients, stress thresholds) are marked `"source": "assumption"` in `data/crops.json` or "ADJUSTABLE DEFAULTS" in `src/model/rotation.js`.
 
+## Context figure (not used in the model)
+
+- Statement by Romania's agriculture minister, reported 13 August 2024: about 2 million hectares of crops affected by drought, mostly spring crops, as reported by the Netherlands agricultural counsellor's office: https://www.agroberichtenbuitenland.nl/actueel/nieuws/2024/08/13/two-million-hectares-affected-so-far-by-drought-in-romania
+
+## Dataset links
+
+- NASA POWER daily API: https://power.larc.nasa.gov/docs/services/api/temporal/daily/
+- MERRA-2: https://gmao.gsfc.nasa.gov/gmao-products/merra-2/
+- CERES: https://ceres.larc.nasa.gov/
+- NASA GIBS: https://nasa-gibs.github.io/gibs-api-docs/
+- MODIS: https://www.earthdata.nasa.gov/data/instruments/modis · SMAP: https://smap.jpl.nasa.gov/ · GPM IMERG: https://gpm.nasa.gov/data/imerg
+
 ## Libraries
 
 - Leaflet 1.9.4 (map), loaded from cdnjs with subresource integrity.
@@ -30,5 +42,6 @@ Parameters with no citation (sowing and flowering months, heat limits, return in
 ## Use of AI tools
 
 - Claude (Anthropic), through Claude Code, was used to write and review the application code, tests and documentation, and to read parameter values out of the FAO-56 online tables. Alex directed the product, scope and decisions.
+- Claude also drafted the submission text and the video script from numbers the app computes, and found the public source for the 2024 drought figure by web search.
 - No AI model runs inside the app. All results come from the NASA data and the published formulas above.
 - No AI-generated images, and no NASA logos or insignia, are used.

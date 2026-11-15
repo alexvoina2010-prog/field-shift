@@ -1,7 +1,7 @@
 # Pitch facts
 
 Striking numbers from the demo field, each with how it was computed. Re-check after any model change:
-the numbers below come from `node --test` data and the browser on 2026-11-14.
+the numbers below come from `node --test` data and the browser on 2026-11-14 (landing-page rows: 2026-11-15).
 
 ## Demo field: Bărăgan Plain, Romania (44.56 N, 27.36 E), loam, rain-fed
 
@@ -23,6 +23,12 @@ saved in `data/demo_field.json`.
 | Wheat's worst seasons | May–June 2002 (62 mm of rain), 2001 (76 mm), 2007 (63 mm): short of water on 53–60 of 61 days | "Worst years" drill-down on the baseline card |
 | Confidence is earned, not assumed | Swapping in chickpea drops the badge from Medium to Low, because its growth-stage lengths are not in the FAO-56 table | Confidence rules in `js/explain.js`, listed on the page under "Data and method" |
 | Same crop, different continent | Maize near Ames, Iowa (42.0 N, 93.6 W): short of water at flowering in **1 of 26** seasons | Same model, live POWER data, loam |
+| The landing headline: sunflower flowers in a heatwave | **17 of 26** summers; chickpea in its place: **8 of 26** | Seasons whose flowering month reaches the crop's heat limit. Flowering month and heat limit are assumptions, so the chickpea option carries a Low badge. Read from the live demo on 2026-11-15 |
+| Chickpea is no better on water | Short of water at flowering in 18 of 26 seasons, the same as sunflower | Same water rule as above, best-match card evidence |
+| Whole rotation, seasons short of water at flowering | 43 of 77 crop seasons now, 40 of 77 with the chickpea swap | Sum over the three crops of the rotation, best-match card evidence |
+| Wheat after chickpea | Short of water in 7 of 25 seasons, against 10 of 25 after sunflower | Same rule, May–June |
+| Overall score at default priorities | 51 of 100 now, 61 of 100 with the chickpea swap | Equal weights on all sub-scores; a score for comparing options, not a yield |
+| Stress test | At +1.5 °C and 20% less rain the ranking holds: 5 of 10 against 4 of 10 | Same replay on the perturbed record, options screen |
 
 ## Wording rules
 
