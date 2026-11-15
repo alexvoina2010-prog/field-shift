@@ -18,6 +18,12 @@ Planned, not yet used: GPM IMERG monthly totals as a rainfall cross-check; eleva
 - USDA Natural Resources Conservation Service (1986). *Urban Hydrology for Small Watersheds*, Technical Release 55. Used for: runoff curve numbers on heavy-rain days (Table 2-2b, row crops, straight rows, good condition).
 - Mann (1945) and Kendall (1975) rank trend test with tie correction; Sen (1968) slope estimator. Used for: the three headline climate facts (`src/model/trend.js`).
 - ETCCDI climate indices: R10mm (days with 10 mm of rain or more) as the heavy-rain day definition.
+- Doorenbos, J., Kassam, A.H. (1979). *Yield response to water.* FAO Irrigation and Drainage Paper 33. Used for: the yield response equation 1 − Ya/Ym = Ky (1 − ETa/ETc) over the whole season (`src/model/money.js`).
+- Steduto, P., Hsiao, T.C., Fereres, E., Raes, D. (2012). *Crop yield response to water.* FAO Irrigation and Drainage Paper 66, Table 1 "Seasonal Ky values from FAO Irrigation and Drainage Paper No. 33" (fao.org/4/i2800e, read 2026-11-15). Used for Ky: winter wheat 1.05, maize 1.25, sunflower 0.95, sorghum 0.9, soybean 0.85, peas 1.15, alfalfa 1.1. Barley, rapeseed and chickpea are not in that table; their Ky is `"source": "assumption"`.
+
+## Example economics (not data)
+
+Yield with no water shortage, price and the five cost lines per crop in `data/crops.json` are `"source": "illustrative"`: plausible example values for a rain-fed farm in South-East Romania, chosen by us, not taken from a market or statistics source. The UI labels them "Example values, change them to yours" and every money figure "Your estimate, using your numbers and NASA weather. Not a price forecast." The farmer's own numbers are kept in their browser only (localStorage), never sent anywhere.
 
 Parameters with no citation (sowing and flowering months, heat limits, return intervals, nitrogen credits, cover-crop and bare-soil coefficients, stress thresholds) are marked `"source": "assumption"` in `data/crops.json` or "ADJUSTABLE DEFAULTS" in `src/model/rotation.js`.
 
@@ -45,6 +51,8 @@ Parameters with no citation (sowing and flowering months, heat limits, return in
 
 - Claude (Anthropic), through Claude Code, was used to write and review the application code, tests and documentation, and to read parameter values out of the FAO-56 online tables. Alex directed the product, scope and decisions.
 - Claude also drafted the submission text and the video script from numbers the app computes, and found the public source for the 2024 drought figure by web search.
+- Farm-plan build (15 Nov): Claude wrote the money, goals and plan modules and their tests, located the FAO-66 PDF by web search and read the Ky table from it (the value it first had in mind for winter wheat, 1.0, was wrong; the table says 1.05), and chose the illustrative example prices and costs, which are labelled as such.
+- Farm-plan build (15 Nov): Claude wrote the money, goals and plan modules and their tests, located the FAO-66 PDF by web search and read the Ky table from it (the first value it had in mind for winter wheat, 1.0, was wrong; the table says 1.05), and chose the illustrative example prices and costs, which are labelled as such.
 - The visual identity (palette, type, the three-band BioShift mark, page layout) was redesigned with Claude Code and the Hallmark design skill, on Alex's choices of tone and colour.
 - No AI model runs inside the app. All results come from the NASA data and the published formulas above.
 - No AI-generated images, and no NASA logos or insignia, are used.

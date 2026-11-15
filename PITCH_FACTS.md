@@ -30,9 +30,24 @@ saved in `data/demo_field.json`.
 | Overall score at default priorities | 51 of 100 now, 61 of 100 with the chickpea swap | Equal weights on all sub-scores; a score for comparing options, not a yield |
 | Stress test | At +1.5 °C and 20% less rain the ranking holds: 5 of 10 against 4 of 10 | Same replay on the perturbed record, options screen |
 
+## Money on the demo farm (120 ha, example prices and costs, 2026-11-15)
+
+All figures are whole-farm profit over the replayed years 2001–2025 (25 years with every crop's season complete), equal blocks, rain-fed, FAO-33 yield response with FAO-66 Table 1 Ky. They are estimates from **example** prices and costs, not market data. Re-read from the options screen after any change.
+
+| Fact | Number | How computed |
+|---|---|---|
+| What you grow now, wheat → maize → sunflower | Normal year **+28 900 lei**, bad year **−78 900 lei**, a loss in **10 of 25** years | Median and 20th percentile of the 25 yearly whole-farm profits; loss = below zero |
+| Swap sunflower for chickpea | Normal year +57 300 lei, bad year −60 700 lei, loss in 9 of 25 | Same |
+| Add a chickpea year (4-year rotation, 4 blocks of 30 ha) | Normal year **+80 400 lei**, bad year **−19 000 lei**, loss in **7 of 25** | Same |
+| The bad-year difference | Adding a chickpea year is **about 60 000 lei better in a bad year** than the current rotation | −19 000 against −78 900 |
+| Maize is the money problem here | In the median season maize gets **35 %** of the yield it could make with enough water; wheat 64 %, sunflower 50 %, chickpea 63 % | Ya/Ym = 1 − Ky (1 − ETa/ETc) per replayed season, median |
+| The farmer's price decides | Drop the chickpea price from 3 000 to 2 000 lei/t and the swap falls from +57 300 to −13 300 lei in a normal year, below what the farm grows now | Same calculation, one input changed in "Your costs and prices" |
+| Goals reorder, numbers stay | With no goal picked, "Swap sunflower for chickpea" comes first (model score); pick "Steadier income in bad years" and "Add a chickpea year" moves to the top and the cover-crop option drops below the current rotation | Goals only sort; see How it works |
+
 ## Wording rules
 
-- Say "would have been short of water in 15 of 26 seasons", never "yield would have dropped by …".
+- Money and yield are the farmer's estimate from their own (or example) numbers on recorded weather: "your estimate", never "you will earn" or a forecast.
+- Say "would have been short of water in 15 of 26 seasons", not "yield would have dropped by …" unless it is the labelled FAO-33 estimate.
 - "Short of water" is a model definition (adjustable defaults in `src/model/rotation.js`), not a measured crop failure.
 - Do not say "the climate here is getting significantly hotter": at this field no tested trend clears p < 0.05. Say "the app only calls a trend a trend when the test agrees".
 - Flowering months and heat limits are assumptions for temperate Europe, not variety data.

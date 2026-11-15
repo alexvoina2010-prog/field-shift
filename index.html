@@ -20,7 +20,7 @@
     <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect class="sky" x="0" y="0" width="26" height="7"/><rect class="wheat" x="7" y="9.5" width="19" height="7"/><rect class="soil" x="0" y="19" width="26" height="7"/></svg>
     BioShift
   </a>
-  <a href="#how">How it works</a>
+  <nav class="top-links" aria-label="Page"><a href="#how">How it works</a><a href="#start" id="start-over-top" hidden>Start over</a></nav>
 </header>
 <p id="status" role="status" aria-live="polite"></p>
 
@@ -103,6 +103,12 @@
       <label><input type="radio" name="irrigation" value="some">Sometimes</label>
       <label><input type="radio" name="irrigation" value="full">Fully irrigated</label>
     </fieldset>
+    <fieldset id="farm-size">
+      <legend>How big is the farm?</legend>
+      <label for="area">Farm size, hectares</label>
+      <input id="area" type="number" inputmode="decimal" min="1" max="100000" step="any" value="120">
+      <p class="hint">Used for whole-farm money. Weather comes from NASA's grid for your area (about 50 km); the size only scales the money.</p>
+    </fieldset>
     <div class="actions">
       <a class="btn primary" href="#crops">Next</a>
       <a href="#start">Back</a>
@@ -130,9 +136,10 @@
     <fieldset class="picks one-col" id="prio">
       <legend>What matters most? Pick up to 2</legend>
     </fieldset>
+    <p class="hint">Your goals only change the order of the options. Every number stays the same.</p>
     <details>
-      <summary>Fine-tune</summary>
-      <p class="hint">Slide right for "matters a lot". The sliders only change how much each score counts in the total; they never change the scores themselves.</p>
+      <summary>Fine-tune (advanced): model weights</summary>
+      <p class="hint">The five model scores behind the options. These weights decide which alternatives are shown and the 0 to 100 model score on each card; with no goal picked above, they also set the order. Slide right for "matters a lot". They never change the scores themselves.</p>
       <div id="weights"></div>
     </details>
     <p class="echo">Can you irrigate? <b id="irr-echo"></b> <a href="#field">Edit</a></p>
@@ -172,13 +179,21 @@
     <p id="scenario-note" class="warn" hidden></p>
     <ol id="ranking" class="rank"></ol>
     <p class="hint">Share of the last 26 seasons this rotation stayed out of trouble, weighted by what you said matters. It compares options; it is not a yield prediction. This tool supports, it does not replace, your judgment.</p>
+    <details class="panel" id="costs-panel">
+      <summary>Your costs and prices</summary>
+      <p class="warn">Example values, change them to yours. Every money figure on this page is your estimate, using your numbers and NASA weather. Not a price forecast.</p>
+      <p class="hint">"Yield with no water shortage" is the most this field gives in a year with enough water, about your irrigated yield. Each replayed season then loses yield for the water it lacked (FAO-33 yield response). Costs are per hectare, every year, good or bad.</p>
+      <div id="costs"></div>
+      <button type="button" id="reset-costs">Reset to examples</button>
+    </details>
     <details class="panel" id="shared">
       <summary>What this tool can't see (applies to all options)</summary>
       <ul>
         <li><strong>Your field itself.</strong> Climate comes from a NASA grid cell about 50 km wide. Hollows, frost pockets and local storms are averaged away, and model data can run hotter or drier than a nearby weather station.</li>
         <li><strong>Your soil.</strong> Only the soil type and slope you picked are used. A soil test (organic matter, pH, compaction) would change the picture.</li>
         <li><strong>Irrigation.</strong> The replay is rain-fed. If you irrigate, the water count is shown but left out of the total.</li>
-        <li><strong>Money.</strong> Income is not estimated: no yields, prices, contracts, subsidies, machinery or labour costs.</li>
+        <li><strong>Money.</strong> Profit is your estimate from the prices and costs under "Your costs and prices" (example values until you change them). Subsidies, contracts, storage, rent and loans are not included, and yield losses count water shortage only, not heat, pests or hail.</li>
+        <li><strong>Seed and licence rules.</strong> Seed variety rules (for example GMO bans) and local licences are not checked.</li>
         <li><strong>Pests, diseases and weeds actually present.</strong> Only general rules on how often a crop should return.</li>
         <li><strong>Local crop calendars and varieties.</strong> Sowing dates, flowering months and heat limits are assumptions for temperate Europe, not your varieties.</li>
       </ul>
@@ -235,6 +250,9 @@
     <label class="no-print" for="pick">Option to discuss</label>
     <select id="pick" class="no-print"></select>
     <div id="report"></div>
+    <label for="notes">Your notes for the agronomist</label>
+    <textarea id="notes" rows="4" placeholder="For example: soil test from 2024, broomrape seen on the north block"></textarea>
+    <p class="hint no-print">Saved in this browser only, with your field and numbers. <a href="#start" id="start-over">Start over</a> clears them.</p>
     <div class="actions">
       <button type="button" class="btn primary" id="print">Print / Save as PDF</button>
       <a id="whatsapp" target="_blank" rel="noopener">Send on WhatsApp</a>
@@ -255,8 +273,10 @@
       <li><strong>"Short of water at flowering":</strong> on at least half the days of the crop's flowering months, dry soil would have let it draw less than half the water it needed (FAO-56 stress coefficient Ks below 0.5). Both halves are adjustable defaults, not benchmarks.</li>
       <li><strong>"Heatwave at flowering":</strong> 5 or more days above the crop's heat limit while it flowers.</li>
       <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>
-      <li><strong>"What matters most":</strong> a picked priority counts three times as much as one not picked. "Fine-tune" shows and changes the exact weights.</li>
-      <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 score divided by ten and rounded.</li>
+      <li><strong>Yield in each replayed season:</strong> FAO-33 yield response, 1 − Ya/Ym = Ky × (1 − ETa/ETc), over the whole season from sowing to harvest. ETc is what the crop would use with enough water (crop coefficient × reference ET); ETa is what the daily water balance let it use. Ky values come from FAO Irrigation and Drainage Paper 66, Table 1 (which reprints Paper 33): winter wheat 1.05, maize 1.25, sunflower 0.95, sorghum 0.9, soybean 0.85, peas 1.15, alfalfa 1.1. Barley, rapeseed and chickpea are not in that table; their Ky is an assumption and labelled so. Only water shortage lowers yield; heat at flowering is counted separately. A fully irrigated field gets no water loss (irrigation water and its cost are not modelled).</li>
+      <li><strong>Money:</strong> profit per hectare = yield × your price − your five costs (seed, fertiliser, crop protection, machinery and fuel, labour). Starting values are examples for a rain-fed farm in South-East Romania, not market data. Whole-farm profit for each replayed year adds up every block: a rotation of N years on your farm is N equal blocks, each one year ahead of the next, so every crop is grown every year. "Normal year" is the median of the replayed years; "bad year" is the 20th percentile, the worst one year in five; "years with a loss" counts years below zero. It is your estimate, not a price or yield forecast.</li>
+      <li><strong>Your goals:</strong> More profit (normal-year profit); Steadier income (bad-year profit, lowered by the share of loss years); Less work and machinery (workload of each crop, plus half a step for each machine the farm does not use now); Healthier soil (legume years, soil covered when heavy rain falls, fewer bare months); Use less water (how often crops were short of water at flowering). Each goal is scaled 0 to 1 across the options shown and the picked goals are averaged. Goals only order the options; the alternatives themselves are found with the model weights under "Fine-tune (advanced)", so the most profitable possible change may not be among them.</li>
+      <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 model score divided by ten and rounded.</li>
       <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35° to 60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
       <li><strong>Soil organic matter</strong> is a qualitative note from months of bare soil and cover crops, not a measurement or a score.</li>
       <li><strong>Trends:</strong> Mann-Kendall test with Sen's slope on one value per year. "How sure: strong" means p is below 0.05; "weak" means p between 0.05 and 0.1; otherwise no trend is claimed.</li>

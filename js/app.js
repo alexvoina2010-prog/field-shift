@@ -6,6 +6,10 @@ import { layout, suggest, METRICS } from '../src/model/rotation.js';
 import { explain, title, LABELS, monthName, cropLabel } from './explain.js';
 import { ribbon, cellText } from './ribbon.js';
 import { mannKendall } from '../src/model/trend.js';
+import { farmYears, moneySummary, equalBlocks } from '../src/model/money.js';
+import { GOALS, sortByGoals } from '../src/model/goals.js';
+import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
+import { loadFarm, saveFarm, clearFarm } from './store.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -13,8 +17,14 @@ const picked = (name) => document.querySelector(`input[name=${name}]:checked`).v
 const setPicked = (name, value) => { const el = document.querySelector(`input[name=${name}][value="${value}"]`); if (el) el.checked = true; };
 const irrigated = () => picked('irrigation') !== 'none'; // "Sometimes" and "Fully" both count as irrigated
 const DEMO_CROPS = ['wheat', 'maize', 'sunflower'];
-const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null };
+const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '' };
 const MAX_YEARS = 5;
+const DEMO_AREA = 120; // ha
+// The coming harvest year: from August on, autumn sowing is for next year's harvest. Block A grows
+// the first crop of the rotation in this year; money and the plan both use it.
+const today = new Date();
+const START_YEAR_PLAN = today.getMonth() >= 7 ? today.getFullYear() + 1 : today.getFullYear();
+const area = () => { const v = parseFloat($('area').value); return v > 0 && v <= 100000 ? v : DEMO_AREA; };
 
 // ---------- steps ----------
 const STEPS = ['start', 'field', 'crops', 'priorities', 'options', 'weather', 'agronomist', 'how'];
@@ -239,12 +249,12 @@ const WEIGHT_HINTS = {
   erosion: 'Little bare soil when heavy rain falls',
   nitrogen: 'Legumes that fix nitrogen from the air',
 };
-// Step 3 cards. A picked card sets its slider to PICKED, the others to UNPICKED; the sliders stay the source of truth.
-const PRIORITIES = {
-  water: 'Enough water at flowering', heat: 'No heatwave at flowering', frost: 'No frost after sowing',
-  erosion: 'Soil covered when storms hit', nitrogen: 'Crops that feed the soil',
+// Step 3: farmer goals (up to two) set the order; the advanced sliders set the model weights.
+const GOAL_HINTS = {
+  profit: 'Profit in a normal year', steady: 'Profit in a bad year, and years with a loss', work: 'Workload and machinery you do not have yet',
+  soil: 'Legume years, soil covered in heavy rain, fewer bare months', water: 'How often crops were short of water at flowering',
 };
-const PICKED = 3, UNPICKED = 1, MAX_PICKS = 2;
+const UNPICKED = 1, MAX_PICKS = 2;
 const IRRIGATION = { none: 'No irrigation', some: 'Sometimes', full: 'Fully irrigated' };
 
 function renderRotation() {
@@ -257,7 +267,8 @@ function renderRotation() {
 
 function buildControls() {
   $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${esc(c.name)}</label>`).join('');
-  $('prio').insertAdjacentHTML('beforeend', METRICS.map((k) => `<label><input type="checkbox" name="prio" value="${k}"> ${esc(PRIORITIES[k])}</label>`).join(''));
+  $('prio').insertAdjacentHTML('beforeend', Object.entries(GOALS).map(([k, t]) => `<label><input type="checkbox" name="goal" value="${k}"${state.goals.includes(k) ? ' checked' : ''}>
+    <span>${esc(t)}<span class="src">${esc(GOAL_HINTS[k])}</span></span></label>`).join(''));
   $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])} <output id="wo-${k}"></output>
     <span class="src">${esc(WEIGHT_HINTS[k])}</span>
     <input type="range" id="w-${k}" min="0" max="5" step="1" value="${UNPICKED}"></label>`).join('');
@@ -324,6 +335,7 @@ function card(c, i, cur, ctx, best) {
     <p class="tag">${!c.kind ? 'You now' : best ? 'Best match for you' : KIND_TAG[c.kind]}</p>
     <p class="badge ${level.toLowerCase()}">${level}: ${esc(short)}</p>
     <p class="key">${esc(t.key)}</p>
+    ${moneyBlock(c.money, area(), c.kind ? cur.money : null)}
     ${chips ? `<ul class="chips">${chips}</ul>` : ''}
     ${calendar(c.ev, ctx.mo.shift)}
     <details><summary>Why this option</summary><p>${esc(t.lead)}</p>${list(t.why)}</details>
@@ -338,6 +350,40 @@ function card(c, i, cur, ctx, best) {
     <details><summary>Check with your agronomist</summary>${list(t.risks.length ? t.risks : [NO_RISK])}
       <p><a href="#agronomist" data-pick="${i}">Take this option to your agronomist</a></p></details>
     </article>`;
+}
+
+// Current rotation plus alternatives, each with its replayed whole-farm money, in the farmer's goal order.
+// With no goal picked, the order is the model total from the advanced weights.
+function ranked(current, allowed, ctx, weights) {
+  const { cur, alts } = suggest(current, allowed, ctx, weights);
+  const econs = econsFor(state.econ), full = picked('irrigation') === 'full', ha = area();
+  const all = [{ rot: current, ev: cur.ev, total: cur.total }, ...alts].map((o) => ({
+    ...o, money: moneySummary(farmYears(o.ev, econs, equalBlocks(o.rot.crops.length, ha), full, START_YEAR_PLAN)) }));
+  const options = state.goals.length ? sortByGoals(all, current, state.goals) : [...all].sort((a, b) => b.total - a.total);
+  return { options, now: options.find((o) => !o.kind) };
+}
+
+function persist() {
+  saveFarm({ lat: $('lat').value, lon: $('lon').value, soil: picked('soil'), slope: picked('slope'), irr: picked('irrigation'),
+    crops: state.crops, cover: $('cover').checked, livestock: $('livestock').checked, area: $('area').value,
+    econ: state.econ, goals: state.goals, notes: $('notes').value });
+  $('start-over-top').hidden = false;
+}
+
+// Saved farm from this browser. Read like any outside input: only known crops, goals and numbers pass.
+function applyFarm(f) {
+  if (!f) return;
+  const lat = parseFloat(f.lat), lon = parseFloat(f.lon);
+  if (Number.isFinite(lat) && Number.isFinite(lon)) { $('lat').value = lat.toFixed(2); $('lon').value = lon.toFixed(2); map.setView([lat, lon], 7); }
+  setPicked('soil', f.soil); setPicked('slope', f.slope); setPicked('irrigation', f.irr);
+  const crops = (Array.isArray(f.crops) ? f.crops : []).filter((id) => id in CROPS).slice(0, MAX_YEARS);
+  if (crops.length) state.crops = crops;
+  $('cover').checked = f.cover === true; $('livestock').checked = f.livestock === true;
+  if (+f.area > 0 && +f.area <= 100000) $('area').value = +f.area;
+  state.econ = sanitizeEcon(f.econ);
+  state.goals = (Array.isArray(f.goals) ? f.goals : []).filter((g) => g in GOALS).slice(0, MAX_PICKS);
+  if (typeof f.notes === 'string') $('notes').value = f.notes.slice(0, 5000);
+  $('start-over-top').hidden = false;
 }
 
 function renderOptions() {
@@ -367,29 +413,29 @@ function renderOptions() {
   // Constraints: an irrigated field takes the rain-only water count out of the total; forage crops
   // are only offered when there is livestock or a hay buyer. Sliders only re-weight computed scores.
   $('w-water').disabled = wet;
-  document.querySelector('input[name=prio][value=water]').disabled = wet;
   const weights = Object.fromEntries(METRICS.map((k) => [k, k === 'water' && wet ? 0 : +$(`w-${k}`).value]));
   const weightSum = METRICS.reduce((s, k) => s + weights[k], 0);
   for (const k of METRICS) $(`wo-${k}`).textContent = k === 'water' && wet ? 'not counted (irrigated)' : weightSum ? `${Math.round((100 * weights[k]) / weightSum)}% of the score` : '0%';
   const allowed = [...document.querySelectorAll('#allowed input:checked')].map((i) => i.value)
     .filter((id) => id in CROPS && ($('livestock').checked || !CROPS[id].forage));
-  const { cur, alts } = suggest(current, allowed, ctx, weights);
-  const now = { rot: current, ev: cur.ev, total: cur.total };
-  const options = [now, ...alts].sort((a, b) => b.total - a.total), top = options[0];
+  const { options, now } = ranked(current, allowed, ctx, weights), top = options[0];
   if (rainPct || dT) {
-    // Stress test: say whether the adjusted weather changes which option scores highest.
-    const b = suggest(current, allowed, { ...ctx, mo: state.base, clim: summarize(state.base).clim }, weights);
-    const was = rotName(b.alts.reduce((m, a) => (a.total > m.total ? a : m), { ...b.cur, rot: current }).rot), is = rotName(top.rot);
+    // Stress test: say whether the adjusted weather changes which option comes first.
+    const was = rotName(ranked(current, allowed, { ...ctx, mo: state.base, clim: summarize(state.base).clim }, weights).options[0].rot), is = rotName(top.rot);
     note.textContent += was === is
-      ? ` The ranking holds: ${is} still scores highest.`
-      : ` The ranking flips: on the recorded weather ${was} scored highest; in this scenario ${is} does.`;
+      ? ` The order holds: ${is} still comes first.`
+      : ` The order flips: on the recorded weather ${was} came first; in this scenario ${is} does.`;
   }
+  const goalText = state.goals.length ? state.goals.map((g) => GOALS[g].toLowerCase()).join(' and ') : 'the five model scores';
   $('answer').textContent = top.kind
-    ? `Best match for what you said matters: ${title(top).title.toLowerCase()}. ${seasonsOk(top)}, against ${seasonsOk(now).replace(' seasons OK', '')} for what you grow now.`
-    : 'For what you said matters, none of the alternatives scores higher than what you grow now.';
+    ? `Best match for ${goalText}: ${title(top).title.toLowerCase()}. In a bad year (the worst one in five) your estimate is ${money(top.money.bad)}, against ${money(now.money.bad)} for what you grow now.`
+    : `For ${goalText}, none of the alternatives beats what you grow now.`;
   $('ranking').innerHTML = ranking(options, now);
   $('cards').innerHTML = options.map((c, i) => card(c, i, now, ctx, c === top && c.kind)).join('');
+  const ids = [...new Set(options.flatMap((o) => o.rot.crops))];
+  if (ids.join() !== state.costIds) { $('costs').innerHTML = costsPanel(ids, state.econ); state.costIds = ids.join(); } // keep focus while typing
   state.result = { options, now, ctx };
+  persist();
   $('pick').innerHTML = options.map((c, i) => `<option value="${i}">${esc(title(c).title)}</option>`).join('');
   if (stepId() === 'agronomist') renderReport();
 }
@@ -437,8 +483,9 @@ function renderReport() {
 
 // ---------- events ----------
 window.addEventListener('hashchange', () => { if (restore()) { renderRotation(); loadField(); } show(); });
-$('see-example').addEventListener('click', () => { state.crops = DEMO_CROPS; renderRotation(); setField(DEMO.lat, DEMO.lon, 7); });
-$('l-plan').addEventListener('click', () => { state.crops = DEMO_CROPS; state.planKey = state.landingPick; renderRotation(); setField(DEMO.lat, DEMO.lon, 7); });
+const loadDemo = () => { state.crops = DEMO_CROPS; $('area').value = DEMO_AREA; renderRotation(); return setField(DEMO.lat, DEMO.lon, 7); };
+$('see-example').addEventListener('click', loadDemo);
+$('l-plan').addEventListener('click', () => { state.planKey = state.landingPick; loadDemo(); });
 $('place').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchPlace, 500); });
 $('place-results').addEventListener('click', (e) => {
   const b = e.target.closest('button');
@@ -485,15 +532,26 @@ $('add-year').addEventListener('click', () => {
   renderRotation(); renderOptions();
 });
 $('prio').addEventListener('change', (e) => {
-  const boxes = [...document.querySelectorAll('input[name=prio]')];
+  const boxes = [...document.querySelectorAll('input[name=goal]')];
   if (boxes.filter((b) => b.checked).length > MAX_PICKS) e.target.checked = false;
-  for (const b of boxes) $(`w-${b.value}`).value = b.checked ? PICKED : UNPICKED;
-  renderOptions();
+  state.goals = boxes.filter((b) => b.checked).map((b) => b.value);
+  renderOptions(); persist();
 });
-$('weights').addEventListener('input', (e) => { // fine-tuning shows on the cards too
-  document.querySelector(`input[name=prio][value=${e.target.id.slice(2)}]`).checked = +e.target.value >= PICKED;
-  renderOptions();
+$('weights').addEventListener('input', renderOptions);
+$('costs').addEventListener('input', (e) => {
+  if (!e.target.dataset.crop) return;
+  state.econ = applyInput(state.econ, e.target);
+  const id = e.target.dataset.crop, fs = e.target.closest('fieldset');
+  fs.querySelector(`[data-sum="${id}"]`).textContent = sumText(econsFor(state.econ)[id]);
+  fs.querySelector('legend .src').textContent = state.econ[id] ? 'your numbers' : 'example values';
+  renderOptions(); persist();
 });
+$('reset-costs').addEventListener('click', () => { state.econ = {}; state.costIds = ''; renderOptions(); persist(); });
+$('area').addEventListener('input', () => { renderOptions(); persist(); });
+$('notes').addEventListener('input', persist);
+for (const id of ['start-over', 'start-over-top']) {
+  $(id).addEventListener('click', () => { clearFarm(); location.hash = '#start'; location.reload(); });
+}
 $('stress').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;
@@ -507,6 +565,7 @@ $('cards').addEventListener('click', (e) => { if (e.target.dataset.pick != null)
 $('pick').addEventListener('change', renderReport);
 $('print').addEventListener('click', () => window.print());
 
+if (!new URLSearchParams(location.hash.split('?')[1] ?? '').size) applyFarm(loadFarm()); // a shared link wins over the saved farm
 buildControls();
 restore();
 renderRotation();

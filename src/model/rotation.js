@@ -75,6 +75,7 @@ export function backtest(lay, mo, soil) {
     if (!run || run.k !== lay.len[run.i] || !run.days) return; // skip seasons cut by the record edge
     seasons[run.i].push({ year: run.year, days: run.days, stress: run.stress, ks: run.ksSum / run.days,
       rain: run.rain, hot: run.hot, tmax: run.tmaxSum / run.days, frost: run.frost });
+    Object.assign(seasons[run.i].at(-1), { etc: run.etc || 0, eta: run.eta || 0 }); // whole-season crop water use, mm (FAO-33 yield response)
   };
   for (let o = 0; o < lay.n; o++) {
     let taw = awc, p = 0.5, dr = taw / 2, run = null, crop = null;
@@ -90,6 +91,7 @@ export function backtest(lay, mo, soil) {
         const rain = m.rainD[j], runoff = rain > ia ? (rain - ia) ** 2 / (rain + 0.8 * S) : 0;
         const ks = dr <= p * taw ? 1 : (taw - dr) / ((1 - p) * taw);
         dr = Math.min(taw, Math.max(0, dr - (rain - runoff) + ks * kc * m.et0D[j]));
+        if (run) { run.etc = (run.etc || 0) + kc * m.et0D[j]; run.eta = (run.eta || 0) + ks * kc * m.et0D[j]; } // ETc and ETa, whole season
         if (!flowering) continue;
         run.days++; run.ksSum += ks; run.rain += rain; run.tmaxSum += m.tmax[j];
         if (ks < STRESS_KS) run.stress++;

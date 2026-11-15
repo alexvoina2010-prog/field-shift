@@ -172,6 +172,29 @@ legend { padding: 0; margin-bottom: var(--space-xs); font-size: var(--text-md); 
 .metric > span:first-child { grid-column: 1 / -1; }
 .metric .n { text-align: right; font-family: var(--font-outlier); font-variant-numeric: tabular-nums; }
 
+/* money: the farmer's estimate, in mono figures under a ruled caption */
+.money { margin: var(--space-sm) 0; padding: var(--space-xs) 0 0; border-top: var(--rule-hair) solid var(--color-rule); }
+.money-k { font-size: var(--text-xs); font-weight: 600; color: var(--color-muted); margin: 0; }
+.money dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr)); gap: var(--space-2xs) var(--space-md); margin: var(--space-2xs) 0; }
+.money dt { font-size: var(--text-xs); color: var(--color-muted); }
+.money dd { margin: 0; font: 500 var(--text-lg)/1.2 var(--font-outlier); font-variant-numeric: tabular-nums; color: var(--color-ink); }
+.money dd small { display: block; font: 500 var(--text-xs)/1.3 var(--font-body); color: var(--color-muted); }
+.econ { margin: var(--space-md) 0 0; padding-top: var(--space-xs); border-top: var(--rule-hair) solid var(--color-rule); }
+.econ legend { font-size: var(--text-md); }
+.econ legend .src { display: inline; margin-left: var(--space-xs); font-weight: 400; }
+.econ-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-sm); align-items: end; }
+@media (min-width: 900px) { .econ-grid { grid-template-columns: repeat(auto-fill, minmax(10.5em, 1fr)); } }
+.econ-grid label { font-weight: 500; font-size: var(--text-sm); margin-top: var(--space-xs); }
+.econ-grid .unit { font-weight: 400; color: var(--color-muted); font-size: var(--text-xs); }
+#costs-panel > .warn { margin-top: 0; }
+#reset-costs { margin-top: var(--space-md); }
+#prio label { flex-wrap: nowrap; }
+#prio label > span { display: flex; flex-direction: column; }
+#prio label .src { font-weight: 400; font-size: var(--text-sm); }
+textarea { display: block; width: 100%; min-height: 6em; margin-top: var(--space-2xs); padding: var(--space-xs) var(--space-sm); font: inherit; font-size: var(--text-md); color: var(--color-ink); background: var(--color-sheet); border: var(--rule-hair) solid var(--color-muted); border-radius: var(--radius-pill); }
+.top-links { display: flex; gap: var(--space-md); }
+input[type=number] { font-family: var(--font-outlier); }
+
 /* rotation calendar */
 .cal { margin: 0 0 var(--space-sm); }
 .cal-years, .cal-months, .cal-row { display: grid; gap: 1px; }

@@ -4,6 +4,8 @@
     "FAO56-T11": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 11: lengths of crop development stages",
     "FAO56-T12": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 12: single crop coefficients Kc",
     "FAO56-T22": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 22: rooting depth and depletion fraction p",
+    "FAO66-T1": "FAO Irrigation and Drainage Paper 66 (Steduto et al., 2012), Table 1: seasonal Ky values from FAO Irrigation and Drainage Paper 33 (Doorenbos and Kassam, 1979)",
+    "illustrative": "Example value for a rain-fed farm in South-East Romania. Not market data: change it to yours.",
     "assumption": "Assumption: agronomy rule of thumb, no citation attached. Check locally."
   },
   "crops": {
@@ -18,6 +20,12 @@
       "flower": { "value": [5, 6], "source": "assumption", "confidence": "low", "note": "flowering and grain fill" },
       "heatTmax": { "value": 32, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 1.05, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 7.5, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 1000, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 450, "fertiliser": 1300, "protection": 600, "machinery": 1100, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "low", "machinery": ["grain drill","combine"],
+      "ask": "Which wheat variety and sowing date suit your autumn moisture? Is a fungicide at heading worth it here?",
       "risk": "Grain fill in early summer is the heat-sensitive stage; sowing needs autumn moisture."
     },
     "barley": {
@@ -31,6 +39,12 @@
       "flower": { "value": [5, 6], "source": "assumption", "confidence": "low" },
       "heatTmax": { "value": 32, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 1.05, "source": "assumption", "confidence": "low", "note": "not in FAO-33; winter wheat value used" },
+      "ym": { "value": 7, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 900, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 400, "fertiliser": 1100, "protection": 500, "machinery": 1050, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "low", "machinery": ["grain drill","combine"],
+      "ask": "Is winter barley hardy enough for your coldest winters? Which variety?",
       "risk": "Less winter-hardy than wheat; check varieties for your winters."
     },
     "rapeseed": {
@@ -44,6 +58,12 @@
       "flower": { "value": [5], "source": "assumption", "confidence": "low" },
       "heatTmax": { "value": 29, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 4, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 1, "source": "assumption", "confidence": "low", "note": "not in FAO-33" },
+      "ym": { "value": 4, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 2300, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 350, "fertiliser": 1500, "protection": 900, "machinery": 1100, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["grain drill","combine"],
+      "ask": "Will the soil hold enough moisture to establish rapeseed in late summer? Which autumn pests need watching?",
       "risk": "Needs rain around sowing to establish; insect pressure and input costs vary a lot locally."
     },
     "maize": {
@@ -57,6 +77,12 @@
       "flower": { "value": [7], "source": "assumption", "confidence": "low" },
       "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 1.25, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 11, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 950, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 1100, "fertiliser": 1400, "protection": 600, "machinery": 1300, "labour": 350 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["row planter","combine","grain dryer"],
+      "ask": "Which maturity group avoids flowering in your hottest July weeks? Is drying grain on the farm worth it?",
       "risk": "Flowering in mid-summer coincides with the hottest, driest weeks."
     },
     "sunflower": {
@@ -70,6 +96,12 @@
       "flower": { "value": [7], "source": "assumption", "confidence": "low" },
       "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 5, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 0.95, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 4.5, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 2200, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 900, "fertiliser": 800, "protection": 700, "machinery": 1100, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "low", "machinery": ["row planter","combine"],
+      "ask": "Is broomrape present on this block? Which tolerant hybrid would you use?",
       "risk": "Disease and broomrape build up if it returns too often; leaves the soil dry for the next crop."
     },
     "sorghum": {
@@ -83,6 +115,12 @@
       "flower": { "value": [7, 8], "source": "assumption", "confidence": "low" },
       "heatTmax": { "value": 38, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 2, "source": "assumption", "confidence": "low" },
+      "ky": { "value": 0.9, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 8, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 850, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 400, "fertiliser": 900, "protection": 450, "machinery": 1150, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["row planter","combine","grain dryer"],
+      "ask": "Is there a buyer for sorghum grain near you? How will you handle bird damage and grain drying?",
       "risk": "Bird damage, grain drying, and often a thinner market than maize. Needs warm soil at sowing."
     },
     "soybean": {
@@ -97,6 +135,12 @@
       "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 3, "source": "assumption", "confidence": "low" },
       "nCredit": { "value": [20, 45], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "ky": { "value": 0.85, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 4, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 2000, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 900, "fertiliser": 300, "protection": 700, "machinery": 1100, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["row planter","combine"],
+      "ask": "Does the seed need an inoculant where soybean is new? Which maturity group fits?",
       "risk": "Pod fill needs late-summer moisture; seed inoculation is needed where soybean is new."
     },
     "pea": {
@@ -111,6 +155,12 @@
       "heatTmax": { "value": 28, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 5, "source": "assumption", "confidence": "low" },
       "nCredit": { "value": [20, 50], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "ky": { "value": 1.15, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 4, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 1400, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 800, "fertiliser": 250, "protection": 600, "machinery": 1000, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["grain drill","combine"],
+      "ask": "Which pea variety resists lodging? Are root diseases present from earlier peas?",
       "risk": "Sensitive to heat at flowering and to lodging at harvest; root diseases if it returns too often."
     },
     "chickpea": {
@@ -125,6 +175,12 @@
       "heatTmax": { "value": 35, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 4, "source": "assumption", "confidence": "low" },
       "nCredit": { "value": [20, 40], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "ky": { "value": 0.85, "source": "assumption", "confidence": "low", "note": "not in FAO-33; soybean value used" },
+      "ym": { "value": 2.8, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 3000, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 1200, "fertiliser": 250, "protection": 700, "machinery": 1050, "labour": 300 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "medium", "machinery": ["grain drill","combine"],
+      "ask": "Seed inoculant for chickpea? Ascochyta blight risk in wet springs, and which variety tolerates it? Is there a buyer?",
       "risk": "Ascochyta blight in wet springs; the local market can be small."
     },
     "alfalfa": {
@@ -139,6 +195,12 @@
       "heatTmax": { "value": 38, "source": "assumption", "confidence": "low" },
       "minReturn": { "value": 1, "source": "assumption", "confidence": "low" },
       "nCredit": { "value": [80, 150], "source": "assumption", "confidence": "low", "note": "kg N/ha left for the next crop" },
+      "ky": { "value": 1.1, "source": "FAO66-T1", "confidence": "medium", "note": "seasonal yield response factor" },
+      "ym": { "value": 14, "source": "illustrative", "confidence": "low", "note": "t/ha in a season with no water shortage (FAO-33 Ym), about the irrigated yield" },
+      "price": { "value": 600, "source": "illustrative", "confidence": "low", "note": "lei per tonne" },
+      "costs": { "value": { "seed": 400, "fertiliser": 300, "protection": 250, "machinery": 1400, "labour": 500 }, "source": "illustrative", "confidence": "low", "note": "lei per hectare" },
+      "workload": "high", "machinery": ["grain drill","mower","baler"],
+      "ask": "Can the stand stay 3-4 years on this block? Who buys the hay, and at what price?",
       "risk": "A stand normally stays 3-4 years, so a single year rarely pays. Forage needs livestock or a hay buyer."
     }
   },
