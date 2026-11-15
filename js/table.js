@@ -14,7 +14,7 @@ const PER = 26; // bad seasons are shown per 26, the length of the record
 export function change(c) {
   if (!c.kind) return 'Nothing: what you grow now';
   if (c.kind === 'swap') return `Grow ${lc(c.id)} instead of ${lc(c.old)} on one block`;
-  if (c.kind === 'cover') return 'Sow a cover crop in the long bare gaps';
+  if (c.kind === 'cover') return 'Sow a cover crop in the long bare gaps (its seed cost is not in the profit)';
   return `Add a year of ${lc(c.id)}, in ${c.rot.crops.length} blocks instead of ${c.rot.crops.length - 1}`;
 }
 

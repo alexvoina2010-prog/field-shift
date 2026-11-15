@@ -457,7 +457,7 @@ function renderOptions() {
   state.result = null;
   if (!lay.feasible) {
     const i = lay.clash[0], a = CROPS[state.crops[i]].name, b = CROPS[state.crops[(i + 1) % state.crops.length]].name;
-    $('answer').textContent = ''; $('ranking').innerHTML = '';
+    $('answer').textContent = ''; $('ranking').innerHTML = ''; $('farm-strips').innerHTML = '';
     $('cards').innerHTML = `<p class="warn">This order does not fit the calendar: ${esc(b)} has to be sown before ${esc(a)} is harvested. <a href="#crops">Change one of them</a>, or put another crop between them.</p>`;
     return;
   }
