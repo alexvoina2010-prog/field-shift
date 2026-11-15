@@ -8,7 +8,7 @@
 | NASA GIBS WMTS: `MODIS_Terra_L3_NDVI_Monthly` | Vegetation map layer | Live tiles |
 | NASA GIBS WMTS: `SMAP_L4_Analyzed_Root_Zone_Soil_Moisture` | Soil moisture map layer | Live tiles |
 | NASA GIBS WMTS: `IMERG_Precipitation_Rate` | Rainfall map layer | Live tiles |
-| OpenStreetMap | Base map | Live tiles |
+| OpenStreetMap | Base map tiles; Nominatim place search ("Village or town" box, only the typed name is sent) | Live |
 
 Planned, not yet used: GPM IMERG monthly totals as a rainfall cross-check; elevation/slope from SRTM.
 

@@ -7,6 +7,14 @@ export const LABELS = {
   water: 'Seasons with enough water', heat: 'Seasons without a heat hit', frost: 'Seasons without frost after sowing',
   erosion: 'Heavy rain kept off bare soil', nitrogen: 'Years with a nitrogen-fixing crop',
 };
+// Short chip labels for the same five scores.
+const SHORT = { water: 'Water', heat: 'Heat safety', frost: 'Frost safety', erosion: 'Soil cover', nitrogen: 'Nitrogen' };
+// Calendar labels: emoji + three letters, so nothing is truncated on a phone.
+const ICONS = {
+  wheat: ['🌾', 'Wht'], barley: ['🌾', 'Bar'], rapeseed: ['🌼', 'Rap'], maize: ['🌽', 'Mze'], sunflower: ['🌻', 'Sun'],
+  sorghum: ['🌾', 'Sor'], soybean: ['🌿', 'Soy'], pea: ['🌿', 'Pea'], chickpea: ['🌿', 'Chk'], alfalfa: ['☘️', 'Alf'],
+};
+export const cropLabel = (id) => ICONS[id] ?? ['🌱', CROPS[id].name.slice(0, 3)];
 const NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 // Model months are shifted by 6 south of the equator; shift back for display.
 export const monthName = (m0, shift = 0) => NAMES[(((m0 - shift) % 12) + 12) % 12];
@@ -26,6 +34,22 @@ export function title(c) {
   if (c.kind === 'cover') return { title: 'Keep the crops, add cover crops', lead: `Same crops. A cover mix (for example vetch + oats) is sown in every gap of ${COVER_MIN_GAP} months or more.` };
   if (c.kind === 'swap') return { title: `Swap ${name(c.old)} for ${name(c.id)}`, lead: `Year ${c.at + 1}: ${name(c.id)} instead of ${name(c.old)}. Everything else stays.` };
   return { title: `Add ${/^[AEIOU]/.test(name(c.id)) ? 'an' : 'a'} ${name(c.id)} year`, lead: `The rotation grows from ${c.rot.crops.length - 1} to ${c.rot.crops.length} years.` };
+}
+
+const rate = (w, k) => (w.n ? w[k] / w.n : 0);
+const KEY_FACTS = { hot: 'Heatwave at flowering', dry: 'Short of water at flowering' };
+// The single most important fact for a card: what the change moves, or the rotation's worst count.
+function keyFact(c, cur) {
+  const f = c.ev.facts;
+  if (c.kind === 'swap') {
+    const o = cur.facts.crops[c.at], x = f.crops[c.at], drop = (k) => rate(o, k) - rate(x, k);
+    const k = drop('hot') >= drop('dry') ? 'hot' : 'dry';
+    if (drop(k) >= 0.1) return `${KEY_FACTS[k]}: ${o.n === x.n ? `${o[k]} → ${x[k]} of ${x.n}` : `${of(o, k)} → ${of(x, k)}`} seasons`;
+  }
+  if (c.kind === 'cover') return `Bare soil: ${one(cur.facts.bare / cur.facts.n)} → ${one(f.bare / f.n)} months a year`;
+  if (c.kind === 'insert' && CROPS[c.id].legume) return `Legume years: ${cur.facts.legumeYears} of ${cur.facts.n} → ${f.legumeYears} of ${f.n}`;
+  const worst = c.ev.rot.crops.flatMap((id, i) => ['hot', 'dry'].map((k) => ({ id, k, w: f.crops[i] }))).sort((a, b) => rate(b.w, b.k) - rate(a.w, a.k))[0];
+  return `${name(worst.id)}: ${KEY_FACTS[worst.k].toLowerCase()} in ${of(worst.w, worst.k)} seasons`;
 }
 
 const gapText = (g, shift) => `${monthName(g.months[0].abs % 12, shift)}–${monthName(g.months.at(-1).abs % 12, shift)}`;
@@ -112,13 +136,13 @@ function worst(ev, shift) {
 //         source agreeing within 20%.
 const WATER_PARAMS = ['kc', 'stages', 'root', 'p'];
 export function confidence(ev, lat) {
-  const reasons = [];
+  const reasons = [], short = []; // short: the few-word reason shown on the badge
   const weak = [...new Set(ev.rot.crops)].filter((id) => WATER_PARAMS.some((k) => CROPS[id].src[k].source === 'assumption'));
-  if (weak.length) reasons.push(`${weak.map(name).join(', ')}: growth-stage lengths are an assumption, not an FAO-56 table value.`);
-  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) reasons.push('This field is outside the temperate latitudes (35°–60°) the crop calendar was written for.');
-  if (ev.facts.crops.some((c) => c.n < 15)) reasons.push('Fewer than 15 replayed seasons for at least one crop.');
-  if (reasons.length) return { level: 'Low', reasons };
-  return { level: 'Medium', reasons: ['Water-balance parameters are FAO-56 table values, but flowering months and heat limits are assumptions and rainfall comes from one source.'] };
+  if (weak.length) reasons.push(`${weak.map(name).join(', ')}: growth-stage lengths are an assumption, not an FAO-56 table value.`) && short.push(`${weak.map(name).join(', ')} data is an estimate`);
+  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) reasons.push('This field is outside the temperate latitudes (35°–60°) the crop calendar was written for.') && short.push('outside the crop calendar’s latitudes');
+  if (ev.facts.crops.some((c) => c.n < 15)) reasons.push('Fewer than 15 replayed seasons for at least one crop.') && short.push('fewer than 15 seasons replayed');
+  if (reasons.length) return { level: 'Low', reasons, short: short[0] };
+  return { level: 'Medium', short: 'flowering and heat limits are assumed', reasons: ['Water-balance parameters are FAO-56 table values, but flowering months and heat limits are assumptions and rainfall comes from one source.'] };
 }
 
 // Rain in the first two months of the longest covered gap: average and driest-third value.
@@ -150,20 +174,19 @@ function risks(c, ctx) {
   return [...new Set(out)];
 }
 
-function gaps(c, ctx) {
-  const out = ['Income is not estimated: yields, prices, contracts, machinery and labour are not modelled.'];
-  if (ctx.irrigated) out.push('Irrigation is not modelled. The water counts show what rain alone would have done, and are left out of the total score.');
+// Card-specific gaps only. What applies to every option (grid cell, soil, irrigation, money,
+// calendars) is said once in the "What this tool can't see" panel above the cards.
+function gaps(c) {
+  const out = [];
   if (c.id) out.push(`No local yield, price or contract data for ${name(c.id)}.`);
   if (c.ev.facts.coveredGaps) out.push('Cover crop species, sowing date and termination are not modelled.');
-  out.push('Flowering months, heat limits and sowing dates are assumptions for temperate Europe, not your varieties.');
-  out.push('Climate data is a grid cell about 50 km wide, not this exact field. Soil is what you selected, not a soil test.');
   return out;
 }
 
 // c = { kind?, id?, old?, at?, rot, ev, total }; cur = evaluated current rotation (may equal c.ev).
 export function explain(c, cur, ctx) {
   const delta = (k) => (cur ? c.ev.scores[k] - cur.scores[k] : 0);
-  const moved = (sign) => METRICS.filter((k) => sign * delta(k) >= 0.03).map((k) => `${LABELS[k]} ${sign > 0 ? '+' : '−'}${Math.abs(pct(delta(k)))}`);
+  const moved = (sign) => METRICS.filter((k) => sign * delta(k) >= 0.03).map((k) => `${SHORT[k]} ${sign > 0 ? '+' : '−'}${Math.abs(pct(delta(k)))}`);
   return {
     ...title(c),
     headline: headline(c.ev),
@@ -171,9 +194,10 @@ export function explain(c, cur, ctx) {
     evidence: evidence(c.ev, cur),
     worst: worst(c.ev, ctx.mo.shift),
     // Baseline: its strongest scores. Alternatives: what moves against the baseline.
-    benefits: c.kind ? moved(1) : METRICS.filter((k) => c.ev.scores[k] >= 0.75).map((k) => `${LABELS[k]}: ${pct(c.ev.scores[k])} of 100`),
+    benefits: c.kind ? moved(1) : METRICS.filter((k) => c.ev.scores[k] >= 0.75).map((k) => `${SHORT[k]} ${pct(c.ev.scores[k])} of 100`),
     tradeoffs: c.kind ? moved(-1) : [],
-    gaps: gaps(c, ctx),
+    gaps: gaps(c),
+    key: keyFact(c, cur),
     risks: risks(c, ctx),
     confidence: confidence(c.ev, ctx.lat),
   };

@@ -2,7 +2,7 @@
 // current rotation's crop calendar sits on top, so bare and flowering months line up with bad ones.
 import { CROPS } from '../src/model/crops.js';
 import { HOT_DAY, HEAVY_RAIN } from '../src/model/climate.js';
-import { monthName } from './explain.js';
+import { monthName, cropLabel } from './explain.js';
 
 const hotDays = (m) => m.tmax.filter((t) => t >= HOT_DAY).length;
 
@@ -36,12 +36,12 @@ function bands(lay, shift) {
       const s = lay.slots[i * 12 + m];
       const it = !s ? { key: 'bare', cls: 'bare', name: 'Bare soil' }
         : s.cover ? { key: 'cover', cls: 'cover', name: 'Cover crop' }
-        : { key: `c${s.i}`, cls: CROPS[lay.crops[s.i]].legume ? 'legume' : 'crop', name: CROPS[lay.crops[s.i]].name };
+        : { key: `c${s.i}`, cls: CROPS[lay.crops[s.i]].legume ? 'legume' : 'crop', name: CROPS[lay.crops[s.i]].name, id: lay.crops[s.i] };
       const last = segs.at(-1);
       if (last && last.key === it.key) last.len++; else segs.push({ ...it, start: m, len: 1 });
     }
     return `<div class="rb-row"><span class="rb-y">Year ${i + 1}</span>${segs.map((g) =>
-      `<span class="seg ${g.cls}" style="grid-column:span ${g.len}" title="${esc(g.name)}: ${monthName(g.start, shift)}–${monthName(g.start + g.len - 1, shift)}">${g.len >= 3 ? esc(g.name) : ''}</span>`).join('')}</div>`;
+      `<span class="seg ${g.cls}" style="grid-column:span ${g.len}" title="${esc(g.name)}: ${monthName(g.start, shift)}–${monthName(g.start + g.len - 1, shift)}">${g.id && g.len >= 2 ? cropLabel(g.id).slice(0, g.len >= 4 ? 2 : 1).join(' ') : g.key === 'cover' && g.len >= 2 ? '🌱' : ''}</span>`).join('')}</div>`;
   });
   const flowering = Array.from({ length: 12 }, (_, m) => [...new Set(lay.crops)].filter((id) => CROPS[id].flower.includes(m + 1)).map((id) => CROPS[id].name));
   rows.push(`<div class="rb-row rb-flower"><span class="rb-y">Flowering</span>${flowering.map((names) =>
@@ -53,9 +53,10 @@ function bands(lay, shift) {
 export function ribbon(mo, lay, key) {
   const h = HAZARDS[key], shift = mo.shift, labels = binLabels(h);
   const months = Array.from({ length: 12 }, (_, m) => monthName(m, shift));
+  const flowers = (m) => lay.feasible && lay.crops.some((id) => CROPS[id].flower.includes(m + 1)); // the ● months
   const cells = mo.years.map((year, y) => `<div class="rb-row"><span class="rb-y">${year}</span>${months.map((name, m) => {
     const v = h.value(mo.m[y * 12 + m]);
-    return `<span class="rb-c l${level(v, h.cuts)}" data-t="${y * 12 + m}" title="${name} ${year}: ${v}${h.unit}"></span>`;
+    return `<span class="rb-c l${level(v, h.cuts)}${flowers(m) ? ' fl' : ''}" data-t="${y * 12 + m}" title="${name} ${year}: ${v}${h.unit}"></span>`;
   }).join('')}</div>`).join('');
   const table = `<table><thead><tr><th>Year</th>${months.map((n) => `<th>${n}</th>`).join('')}</tr></thead><tbody>${
     mo.years.map((year, y) => `<tr><td>${year}</td>${months.map((_, m) => `<td>${h.value(mo.m[y * 12 + m])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
