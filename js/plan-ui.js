@@ -14,7 +14,17 @@ const ha = (v) => `${Math.round(v * 10) / 10} ha`;
 
 // Short cell text and the sentence form of one event.
 const VERB = { sow: 'Sow', harvest: 'Harvest', flower: 'Flowers', grow: 'Growing', 'sow-cover': 'Sow cover crop', cover: 'Cover crop', bare: 'Bare soil' };
-const cellText = (e, shift) => `${VERB[e.type]}${e.id ? ` ${lc(e.id)}` : ''}${e.month && e.type !== 'grow' ? ` · ${monthName(e.month - 1, shift)}` : ''}`;
+const cellText = (e, shift) => `${VERB[e.type]}${e.id ? ` ${lc(e.id)}` : ''}${e.month && e.type !== 'grow' ? ` · ${monthName(e.month - 1, shift)}${e.own ? ' (yours)' : ''}` : ''}`;
+
+/**
+ * The farmer's usual sowing months replace the typical ones in the plan's dates (display only: the
+ * replay keeps the crop calendar). sow: { cropId: calendar month 1-12 }.
+ */
+function ownSowing(plan, sow = {}, shift = 0) {
+  const rows = plan.rows.map((r) => ({ ...r, cells: r.cells.map((events) => events.map((e) => (
+    e.type === 'sow' && sow[e.id] ? { ...e, month: ((sow[e.id] - 1 + shift) % 12) + 1, own: true } : e))) }));
+  return { ...plan, rows };
+}
 
 /** Crops of this rotation that flowered in trouble often, with the counts that say so. */
 function riskyCrops(c) {
@@ -97,9 +107,10 @@ export function strips(plan, rot, year, startYear) {
  * @param {{blockHa:number[], startYear:number, month0:number, shift:number, area:number}} o
  */
 export function planHtml(c, now, o) {
-  const plan = timeline(c.rot, o.blockHa, o.startYear), current = now.rot, n = c.rot.crops.length;
+  const plan = ownSowing(timeline(c.rot, o.blockHa, o.startYear), o.sow, o.shift), current = now.rot, n = c.rot.crops.length;
   const first = firstStep(plan, c, current, o.month0, o.shift), ch = changes(plan, c, current, o.shift);
-  const qs = questions(c, current), risky = riskyCrops(c), ask = new Set(qs.map((q) => q.id));
+  const qs = [...questions(c, current), ...(o.notes ? o.notes(c.rot).map((text) => ({ id: 'farm', text })) : [])];
+  const risky = riskyCrops(c), ask = new Set(qs.map((q) => q.id));
   const head = plan.rows.length ? `<tr><th scope="col">Season</th>${plan.blocks.map((b) => `<th scope="col">Block ${b.id}<small>${ha(b.ha)}</small></th>`).join('')}</tr>` : '';
   const body = plan.rows.map((r, ri) => `<tr class="${r.season.key}${ri === seasonOf((o.month0 + o.shift) % 12) ? ' now' : ''}"><th scope="row">${esc(r.label)}</th>${
     r.cells.map((events) => `<td>${events.map((e) => {
@@ -133,7 +144,8 @@ export const farmStrips = (c, blockHa, startYear) => strips(timeline(c.rot, bloc
 
 /** Plain-text plan for WhatsApp. */
 export function planText(c, now, o) {
-  const plan = timeline(c.rot, o.blockHa, o.startYear);
+  const plan = ownSowing(timeline(c.rot, o.blockHa, o.startYear), o.sow, o.shift);
   const first = firstStep(plan, c, now.rot, o.month0, o.shift), ch = changes(plan, c, now.rot, o.shift);
-  return [`Plan: ${change(c)}.`, `This ${first.label}: ${first.items.join(' ')}`, ...ch, ...questions(c, now.rot).map((q) => `Ask: ${q.text}`)].join('\n');
+  const notes = o.notes ? o.notes(c.rot) : [];
+  return [`Plan: ${change(c)}.`, `This ${first.label}: ${first.items.join(' ')}`, ...ch, ...questions(c, now.rot).map((q) => `Ask: ${q.text}`), ...notes.map((t) => `Ask: ${t}`)].join('\n');
 }

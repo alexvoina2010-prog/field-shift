@@ -10,6 +10,8 @@ import { farmYears, moneySummary, equalBlocks } from '../src/model/money.js';
 import { GOALS, sortByGoals } from '../src/model/goals.js';
 import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
 import { loadFarm, saveFarm, clearFarm } from './store.js';
+import { moreInputs, applyMore, sanitizeMore, meters, farmNotes, AREAS } from './more-ui.js';
+import { areaConfidence } from '../src/model/confidence.js';
 import { decisionTable, change } from './table.js';
 import { planHtml, planText, farmStrips } from './plan-ui.js';
 import { drawTool } from './draw.js';
@@ -22,7 +24,8 @@ const picked = (name) => document.querySelector(`input[name=${name}]:checked`).v
 const setPicked = (name, value) => { const el = document.querySelector(`input[name=${name}][value="${value}"]`); if (el) el.checked = true; };
 const irrigated = () => picked('irrigation') !== 'none'; // "Sometimes" and "Fully" both count as irrigated
 const DEMO_CROPS = ['wheat', 'maize', 'sunflower'];
-const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '', blockSizes: {}, outline: null };
+const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '', blockSizes: {}, outline: null,
+  more: { machines: [], pests: [], sow: {}, soil: {} } };
 const MAX_YEARS = 5;
 const DEMO_AREA = 120; // ha
 // The coming harvest year: from September on, autumn sowing is for next year's harvest. Block A grows
@@ -403,14 +406,14 @@ function ranked(current, allowed, ctx, weights) {
   const econs = econsFor(state.econ), full = picked('irrigation') === 'full', ha = area();
   const all = [{ rot: current, ev: cur.ev, total: cur.total }, ...alts].map((o) => ({
     ...o, money: moneySummary(farmYears(o.ev, econs, blocksFor(o.rot.crops.length), full, START_YEAR_PLAN)) }));
-  const options = state.goals.length ? sortByGoals(all, current, state.goals) : [...all].sort((a, b) => b.total - a.total);
+  const options = state.goals.length ? sortByGoals(all, current, state.goals, state.more.machines) : [...all].sort((a, b) => b.total - a.total);
   return { options, now: options.find((o) => !o.kind) };
 }
 
 function persist() {
   saveFarm({ lat: $('lat').value, lon: $('lon').value, soil: picked('soil'), slope: picked('slope'), irr: picked('irrigation'),
     crops: state.crops, cover: $('cover').checked, livestock: $('livestock').checked, area: $('area').value,
-    econ: state.econ, goals: state.goals, notes: $('notes').value, outline: state.outline || null, blockSizes: state.blockSizes || {} });
+    econ: state.econ, goals: state.goals, notes: $('notes').value, outline: state.outline || null, blockSizes: state.blockSizes || {}, more: state.more });
   $('start-over-top').hidden = false;
 }
 
@@ -425,6 +428,7 @@ function applyFarm(f) {
   $('cover').checked = f.cover === true; $('livestock').checked = f.livestock === true;
   if (+f.area > 0 && +f.area <= 100000) $('area').value = +f.area;
   state.econ = sanitizeEcon(f.econ);
+  state.more = sanitizeMore(f.more);
   state.goals = (Array.isArray(f.goals) ? f.goals : []).filter((g) => g in GOALS).slice(0, MAX_PICKS);
   if (typeof f.notes === 'string') $('notes').value = f.notes.slice(0, 5000);
   const sizes = f.blockSizes && typeof f.blockSizes === 'object' ? f.blockSizes : {};
@@ -481,12 +485,15 @@ function renderOptions() {
   $('answer').textContent = top.kind
     ? `Best match for ${goalText}: ${change(top).replace(/^./, (m) => m.toLowerCase())}.`
     : `For ${goalText}, none of the alternatives beats what you grow now.`;
-  $('ranking').innerHTML = decisionTable(options, now, state.goals);
+  $('ranking').innerHTML = decisionTable(options, now, state.goals, state.more.machines);
   $('farm-strips').innerHTML = `<p class="hint">Your ${Math.round(area())} ha in ${START_YEAR_PLAN} with ${top.kind ? 'the best match' : 'what you grow now'}: one block per year of the rotation.</p>${farmStrips(top, blocksFor(top.rot.crops.length), START_YEAR_PLAN)}
     <p><a class="card-plan" href="#plan" data-plan="0">See the plan, season by season →</a></p>`;
   $('cards').innerHTML = options.map((c, i) => card(c, i, now, ctx, c === top && c.kind)).join('');
   const ids = [...new Set(options.flatMap((o) => o.rot.crops))];
-  if (ids.join() !== state.costIds) { $('costs').innerHTML = costsPanel(ids, state.econ); state.costIds = ids.join(); } // keep focus while typing
+  if (ids.join() !== state.costIds) { // re-draw only when the crops change, so typing keeps its focus
+    $('costs').innerHTML = costsPanel(ids, state.econ); $('more-inputs').innerHTML = moreInputs(state.more, ids); state.costIds = ids.join();
+  }
+  renderMeters(ids, lat);
   state.result = { options, now, ctx };
   persist();
   $('pick').innerHTML = options.map((c, i) => `<option value="${i}">${esc(title(c).title)}</option>`).join('');
@@ -498,8 +505,18 @@ function renderOptions() {
 const planOpts = (c, ctx) => {
   const blockHa = blocksFor(c.rot.crops.length);
   return { blockHa, equal: blockHa.every((v) => Math.abs(v - blockHa[0]) < 0.05), startYear: START_YEAR_PLAN,
-    month0: today.getMonth(), shift: ctx.mo.shift, area: area(), step: BLOCK_STEP };
+    month0: today.getMonth(), shift: ctx.mo.shift, area: area(), step: BLOCK_STEP, sow: state.more.sow, notes: (rot) => farmNotes(rot, state.more) };
 };
+
+// Confidence meters: say what moved, and why, when an answer changes a level.
+function renderMeters(ids, lat) {
+  const conf = areaConfidence({ crops: ids, econ: state.econ, sow: state.more.sow, soilTest: state.more.soil, lat });
+  const moved = state.conf ? Object.keys(AREAS).filter((k) => state.conf[k].level !== conf[k].level)
+    .map((k) => `${AREAS[k]} confidence ${state.conf[k].level} → ${conf[k].level}: ${conf[k].reason}`) : [];
+  if (moved.length) state.moved = moved; // the last change stays on screen until the next one
+  state.conf = conf;
+  $('meters').innerHTML = meters(conf, state.moved || []);
+}
 
 // The option whose plan is open: a tapped row or card, the landing page's swap, else the best match.
 function planOption() {
@@ -638,6 +655,13 @@ $('costs').addEventListener('input', (e) => {
   fs.querySelector('legend .src').textContent = state.econ[id] ? 'your numbers' : 'example values';
   renderOptions(); persist();
 });
+for (const type of ['input', 'change']) {
+  $('more-inputs').addEventListener(type, (e) => {
+    if (!e.target.dataset.more || (type === 'input' && e.target.type === 'checkbox')) return;
+    state.more = applyMore(state.more, e.target);
+    renderOptions();
+  });
+}
 $('reset-costs').addEventListener('click', () => { state.econ = {}; state.costIds = ''; renderOptions(); persist(); });
 $('area').addEventListener('input', () => { renderOptions(); persist(); });
 $('notes').addEventListener('input', persist);

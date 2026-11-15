@@ -21,9 +21,9 @@ export function change(c) {
 const per26 = (k, total) => (total ? Math.round((PER * k) / total) : 0);
 
 /** Extra work against now: new machinery first, then a change in workload. */
-export function extraWork(c, current) {
+export function extraWork(c, current, owned = []) {
   if (!c.kind) return { text: 'As now', more: 0 };
-  const machines = newMachinery(c.rot, current), dw = workloadOf(c.rot) - workloadOf(current);
+  const machines = newMachinery(c.rot, current, owned), dw = workloadOf(c.rot) - workloadOf(current);
   const parts = [];
   if (machines.length) parts.push(`needs a ${machines.join(', a ')}`);
   if (c.kind === 'cover') parts.push('one extra sowing after harvest');
@@ -39,13 +39,13 @@ const delta = (v, base, higherBetter = true, isMoney = true) => {
 };
 
 /** One-line reason the first option is first, in the farmer's own goals. */
-export function reason(top, now, goals) {
+export function reason(top, now, goals, owned = []) {
   if (!top.kind) return 'None of the alternatives beats what you grow now on what you picked.';
   const lead = goals[0];
   const why = {
     profit: `${money(top.money.normal)} in a normal year against ${money(now.money.normal)} now`,
     steady: `${money(top.money.bad)} in a bad year against ${money(now.money.bad)} now, a loss in ${top.money.lossYears} of ${top.money.n} years instead of ${now.money.lossYears}`,
-    work: extraWork(top, now.rot).text.toLowerCase(),
+    work: extraWork(top, now.rot, owned).text.toLowerCase(),
     soil: 'more legume years or less bare soil than now',
     water: 'fewer seasons short of water at flowering',
   };
@@ -56,10 +56,10 @@ export function reason(top, now, goals) {
  * @param {object[]} options sorted, with .money; @param {object} now the current rotation's row
  * @param {string[]} goals picked goals @returns {string} HTML
  */
-export function decisionTable(options, now, goals) {
+export function decisionTable(options, now, goals, owned = []) {
   const t0 = troubleCount(now.ev, HEAT_DAYS, STRESS_SHARE);
   const rows = options.map((c, i) => {
-    const t = troubleCount(c.ev, HEAT_DAYS, STRESS_SHARE), w = extraWork(c, now.rot), best = i === 0 && c.kind;
+    const t = troubleCount(c.ev, HEAT_DAYS, STRESS_SHARE), w = extraWork(c, now.rot, owned), best = i === 0 && c.kind;
     const bad = per26(t.any, t.total), bad0 = per26(t0.any, t0.total);
     return `<tr class="${c.kind ? '' : 'now'}${best ? ' best' : ''}">
       <th scope="row" data-label="Option"><a href="#plan" data-plan="${i}">${esc(title(c).title)}</a>${c.kind ? '' : ' <em>You now</em>'}${best ? ' <em class="pick">Best match</em>' : ''}</th>
@@ -70,7 +70,7 @@ export function decisionTable(options, now, goals) {
       <td data-label="Extra work" class="txt"><span class="v">${esc(w.text)}</span></td>
     </tr>`;
   }).join('');
-  return `<p class="reason">${esc(reason(options[0], now, goals))}</p>
+  return `<p class="reason">${esc(reason(options[0], now, goals, owned))}</p>
     <table class="decide">
       <thead><tr><th scope="col">Option</th><th scope="col">What changes on your farm</th><th scope="col">Bad seasons (heat or water at flowering), of ${PER}</th>
       <th scope="col">Profit, normal year</th><th scope="col">Profit, bad year (worst one in five)</th><th scope="col">Extra work</th></tr></thead>

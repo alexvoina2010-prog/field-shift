@@ -12,9 +12,9 @@ export const GOALS = {
 const WORKLOAD = { low: 1, medium: 2, high: 3 };
 const NEW_MACHINE = 0.5; // one machine the farm does not use now counts as half a workload step (assumption)
 
-/** Machinery an option needs that the current rotation does not use. */
-export const newMachinery = (rot, current) => {
-  const have = new Set(current.crops.flatMap((id) => CROPS[id].machinery));
+/** Machinery an option needs that the farm does not have: the farmer's list when given, else what the current rotation uses. */
+export const newMachinery = (rot, current, owned = []) => {
+  const have = new Set(owned.length ? owned : current.crops.flatMap((id) => CROPS[id].machinery));
   return [...new Set(rot.crops.flatMap((id) => CROPS[id].machinery))].filter((m) => !have.has(m));
 };
 
@@ -36,12 +36,12 @@ export const workloadOf = (rot) => rot.crops.reduce((s, id) => s + WORKLOAD[CROP
  * @param {{rot:object, ev:object, money:{normal:number,bad:number,lossYears:number,n:number}}} o
  * @param {object} current  the current rotation { crops, cover }
  */
-export function goalValues(o, current) {
+export function goalValues(o, current, owned = []) {
   const f = o.ev.facts, s = o.ev.scores;
   return {
     profit: o.money.normal,
     steady: o.money.bad - (o.money.n ? o.money.lossYears / o.money.n : 0) * Math.abs(o.money.bad || 1),
-    work: -(workloadOf(o.rot) + NEW_MACHINE * newMachinery(o.rot, current).length),
+    work: -(workloadOf(o.rot) + NEW_MACHINE * newMachinery(o.rot, current, owned).length),
     soil: (s.nitrogen + s.erosion + (1 - f.bare / (12 * f.n))) / 3,
     water: s.water,
   };
@@ -51,9 +51,9 @@ export function goalValues(o, current) {
  * Sorts options by the picked goals (all five when none is picked): each goal is scaled 0..1
  * across the options shown, then summed. Returns new objects with .fit (0..1) and .values.
  */
-export function sortByGoals(options, current, picks) {
+export function sortByGoals(options, current, picks, owned = []) {
   const keys = picks.length ? picks : Object.keys(GOALS);
-  const rows = options.map((o) => ({ ...o, values: goalValues(o, current) }));
+  const rows = options.map((o) => ({ ...o, values: goalValues(o, current, owned) }));
   const span = Object.fromEntries(keys.map((k) => {
     const v = rows.map((r) => r.values[k]);
     return [k, [Math.min(...v), Math.max(...v)]];

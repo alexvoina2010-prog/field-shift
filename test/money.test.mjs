@@ -76,6 +76,17 @@ test('climate flags on the demo field: soybean flagged with a counted reason, wh
   assert.equal(f.wheat, null);
 });
 
+test('entering prices raises money confidence and nothing else', async () => {
+  const { areaConfidence } = await import('../src/model/confidence.js');
+  const base = { crops: ['wheat', 'maize'], econ: {}, sow: {}, soilTest: {}, lat: 44.56 };
+  const before = areaConfidence(base);
+  const after = areaConfidence({ ...base, econ: { wheat: { ym: 7, price: 1000 }, maize: { ym: 10, price: 900 } } });
+  assert.equal(before.money.level, 'Low'); assert.equal(after.money.level, 'Medium');
+  for (const k of ['weather', 'soil', 'calendar']) assert.deepEqual(after[k], before[k]);
+  const sown = areaConfidence({ ...base, sow: { wheat: 10, maize: 4 } });
+  assert.equal(sown.calendar.level, 'Medium'); assert.deepEqual(sown.money, before.money);
+});
+
 test('picking "steadier income" ranks the option with the better bad year first', () => {
   const opt = (normal, bad, lossYears) => ({ rot: { crops: ['wheat'] }, total: 0.5,
     ev: { scores: { water: 0.5, nitrogen: 0, erosion: 0.5 }, facts: { bare: 3, n: 1 } }, money: { normal, bad, lossYears, n: 25 } });
