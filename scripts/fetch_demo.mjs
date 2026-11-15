@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Saves the demo field's NASA POWER record to data/demo_field.json so the demo works offline.
 // Run: node scripts/fetch_demo.mjs
 import { writeFile } from 'node:fs/promises';

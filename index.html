@@ -6,6 +6,7 @@
   <title>BioShift: smarter crop-rotation decisions</title>
   <meta name="description" content="See how your crop rotation would have done on 26 years of NASA weather, compare alternatives and take the results to your agronomist.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
+  <meta name="ai-disclosure" content="Code, text and SVG icons written with Claude Code (Anthropic) under the author's direction. Idea and product decisions by the author. No AI runs in the app. See AI-USAGE.md.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -433,7 +434,7 @@
     <details class="panel method" id="methodology">
       <summary>Read the scientific methodology</summary>
       <ul>
-        <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000 to 2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
+        <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000 to 2025 (temperature, rainfall, solar radiation, wind, dew point), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
         <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
         <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
         <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
@@ -483,8 +484,9 @@
 </main>
 
 <footer>
-  <p>A tool for exploring options. It supports, it does not replace, your judgment or a local agronomist. Built for the 2026 NASA Space Apps Challenge, "Field Shift: Adapting Farms with NASA Data". NASA does not endorse this tool.</p>
-  <p>Photograph: <a href="https://commons.wikimedia.org/wiki/File:Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg">Ermell</a> (CC BY-SA 4.0, Wikimedia Commons).</p>
+  <p>A tool for exploring options. It supports, it does not replace, your judgment or a local agronomist. Built for the 2026 NASA Space Apps Challenge, "Field Shift: Adapting Farms with NASA Data". NASA does not endorse this tool. <a href="https://github.com/alexvoina2010-prog/field-shift">Source code on GitHub</a>.</p>
+  <p>Idea, product decisions and design direction by the author. Code written with Claude Code, an AI coding assistant, under the author's direction; the icons and logo were drawn with it. No AI runs inside this tool. <a href="https://github.com/alexvoina2010-prog/field-shift/blob/main/AI-USAGE.md">How AI was used</a>.</p>
+  <p>Photograph: <a href="https://commons.wikimedia.org/wiki/File:Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg">Ermell</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, Wikimedia Commons.</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>

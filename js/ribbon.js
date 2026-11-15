@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Climate ribbon: one square per month of the record, coloured by one hazard at a time. The
 // current rotation's crop calendar sits on top, so bare and flowering months line up with bad ones.
 import { CROPS } from '../src/model/crops.js';

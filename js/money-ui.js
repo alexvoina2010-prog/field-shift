@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // "Your costs and prices" panel and money formatting. Numbers come from src/model/money.js.
 import { CROPS, SOURCES } from '../src/model/crops.js';
 import { COST_KEYS, costTotal, exampleEcon } from '../src/model/money.js';

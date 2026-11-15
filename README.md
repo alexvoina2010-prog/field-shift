@@ -2,6 +2,8 @@
 
 A decision-support tool for the 2026 NASA Space Apps Challenge, **"Field Shift: Adapting Farms with NASA Data"**.
 
+**Live site: https://alexvoina2010-prog.github.io/field-shift/** (no login, works on a phone)
+
 A farmer picks a field on a map, sees what 26 years of NASA data say about it, enters the current rotation and priorities, and compares it with up to three alternatives. Each option shows why it was suggested, the evidence, the gains and trade-offs, the information gaps, and the risks to review locally. It supports the farmer's judgment; it does not replace it.
 
 ## Run it
@@ -29,7 +31,7 @@ node --test
 
 | Source | Used for | Access |
 |---|---|---|
-| NASA POWER daily point API, 2000–2025 (MERRA-2, CERES) | Temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness | Live, in the browser |
+| NASA POWER daily point API, 2000–2025 (MERRA-2, CERES) | Temperature, rainfall, solar radiation, wind, dew point | Live, in the browser |
 | NASA GIBS: MODIS Terra NDVI (monthly) | Vegetation map layer | Live tiles |
 | NASA GIBS: SMAP L4 root-zone soil moisture | Soil moisture map layer | Live tiles |
 | NASA GIBS: GPM IMERG precipitation rate | Rainfall map layer | Live tiles |
@@ -66,6 +68,11 @@ node --test
 - `js/app.js`: map and page wiring.
 - `test/logic.test.mjs`: tests for the logic.
 
-## Use of AI
+## AI usage
 
-This project was built with the help of an AI coding assistant (Claude, by Anthropic), which wrote most of the code and text under the author's direction. The tool itself does not use a generative AI model at run time: all suggestions come from the transparent rules described above. No NASA logos or branding are used.
+Built solo with **Claude Code** (Anthropic's AI coding assistant) and its sub-agents, the only AI tools used. Full detail: [AI-USAGE.md](AI-USAGE.md).
+
+- **The author's:** the idea (replaying decades of NASA weather against a farm's rotation to see the most likely outcome before risking a season), the name, the design direction, the five farmer priorities, the money and profit system, the direction of every change and redesign, and the rules the AI had to follow (audit first, phased plan, no yields or profit as facts, unsourced values labelled "assumption", no untested trends). Tested by hand on a phone.
+- **Claude Code's:** the code, the 25 tests, the documentation and in-app text, the master prompts and clarifying questions that turned the author's explanations into specifications, reading values from the FAO tables, the example prices and costs (labelled as examples), and the SVG icons, logo and favicon (AI-generated images, marked in their files and in the site footer).
+- **Not AI:** no AI runs inside the app; every result comes from NASA data and published formulas. No AI-generated photographs, audio or video. No NASA logos or insignia.
+- **Disclosure in metadata:** a header comment in every source file, `aiDisclosure` in `package.json`, `_ai_note` in `data/crops.json`, and an `ai-disclosure` meta tag in `index.html`.

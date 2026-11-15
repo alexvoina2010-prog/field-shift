@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // "Tell us more about your farm": optional inputs, each tied to the one confidence area it informs.
 import { CROPS } from '../src/model/crops.js';
 

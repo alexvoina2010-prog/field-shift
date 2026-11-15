@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Farmer goals: each one is a number already computed for every option (money from money.js,
 // counts from the backtest). Goals only re-order options; they never change a number.
 import { CROPS } from './crops.js';

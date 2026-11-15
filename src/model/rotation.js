@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Rotation backtest: lays crops on a month calendar, replays the NASA POWER record day by day
 // through an FAO-56 soil-water bucket, and scores each rotation by how often its seasons were in
 // trouble. Every score is a frequency over real seasons; nothing here predicts yield or income.

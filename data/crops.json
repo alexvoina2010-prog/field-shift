@@ -1,5 +1,6 @@
 {
   "_about": "Crop parameters for the rotation backtest. Every numeric field is {value, source, confidence}. source is a key of `sources`. Anything with source \"assumption\" is a rule of thumb with no citation and is labelled as such in the UI. Calendar months are 1-12, typical for temperate South-East Europe.",
+  "_ai_note": "Values were read from the cited FAO tables by Claude Code (AI) and carry their source; values marked assumption or illustrative (including the example prices, yields and costs) were chosen by Claude Code and are labelled as such in the app. See AI-USAGE.md.",
   "sources": {
     "FAO56-T11": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 11: lengths of crop development stages",
     "FAO56-T12": "FAO Irrigation and Drainage Paper 56 (Allen et al., 1998), Table 12: single crop coefficients Kc",

@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Money on replayed weather: FAO-33 yield response, then the farmer's prices and costs.
 // Reads backtest() seasons (etc, eta) and never changes them. Every value here is an estimate built
 // from the farmer's own numbers (or the labelled example values), not a price or yield forecast.

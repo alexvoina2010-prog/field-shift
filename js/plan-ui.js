@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // "Your plan": first step this season, what changes, the season-by-season timeline per block, and the
 // questions for the agronomist. All dates come from the crop calendar in data/crops.json.
 import { CROPS } from '../src/model/crops.js';

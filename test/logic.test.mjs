@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Run: node --test test/
 // Optional: POWER_JSON=<path to a saved NASA POWER response> prints a real-data report too.
 import test from 'node:test';

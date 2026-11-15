@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // The decision table: one row per option, current rotation included, in the farmer's goal order.
 // A table on wide screens; each row becomes a compact card on a phone (labels from data-label).
 import { CROPS } from '../src/model/crops.js';

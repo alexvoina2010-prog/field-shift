@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Turns scores and facts into plain sentences: why, evidence, benefits, gaps, risks.
 import { CROPS } from '../src/model/crops.js';
 import { METRICS, HEAT_DAYS, COVER_MIN_GAP } from '../src/model/rotation.js';

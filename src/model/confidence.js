@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Confidence per area (Weather, Soil, Money, Calendar). Honesty rule: an input raises only the
 // area it actually changes. Nothing the farmer types changes the NASA weather, so Weather never moves.
 

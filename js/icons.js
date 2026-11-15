@@ -1,3 +1,5 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
+// AI-generated images: every icon in this file was drawn as SVG code by Claude Code for this project.
 // Inline SVG illustrations: crops (by plant shape), soil, terrain, irrigation, goal and scenario icons.
 // Decorative only (aria-hidden): every choice they sit on also has a text label.
 

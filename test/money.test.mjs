@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Hand-checked cases for the money layer: FAO-33 yield response, profit sums across blocks, percentiles.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

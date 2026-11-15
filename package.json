@@ -1,5 +1,9 @@
 {
   "name": "field-shift",
+  "description": "BioShift: replay 26 years of NASA weather against a farm's crop rotation and compare alternatives.",
+  "homepage": "https://alexvoina2010-prog.github.io/field-shift/",
+  "repository": "https://github.com/alexvoina2010-prog/field-shift",
+  "aiDisclosure": "Code, tests, text and SVG icons written with Claude Code (Anthropic AI coding assistant) under the author's direction; idea and product decisions by the author. No AI runs in the app. See AI-USAGE.md.",
   "private": true,
   "type": "module",
   "scripts": {

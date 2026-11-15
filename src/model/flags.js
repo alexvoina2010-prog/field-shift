@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Climate flags: crops that rarely suited this field in the replay. A flag is a warning with a
 // computed reason; the crop stays selectable. Each crop is replayed on its own (one-crop rotation).
 // Heat alone is not flagged: the heat limits are assumptions, and a heat-only rule flagged winter

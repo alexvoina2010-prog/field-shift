@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // The farmer's farm, kept in this browser only (localStorage). Every access is wrapped: private
 // windows and blocked storage simply start from the defaults.
 const KEY = 'bioshift.farm.v1';

@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // "Draw your field": tap corners on the map, drag them to adjust, see hectares live.
 // No library: a Leaflet polygon plus one draggable marker per corner.
 /* global L */

@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Page wiring: wizard steps, map, NASA POWER fetch, and rendering. All agronomy logic lives in the other modules.
 /* global L */
 import { CROPS } from '../src/model/crops.js';
@@ -109,7 +110,7 @@ function setField(lat, lon, zoom) {
   return loadField();
 }
 
-// Place search: OpenStreetMap Nominatim, at most one request per 500 ms pause in typing.
+// Place search: OpenStreetMap Nominatim, one request after a 1 s pause in typing (usage policy: max 1 request/s).
 let searchTimer = null, searchSeq = 0;
 async function searchPlace() {
   const q = $('place').value.trim(), box = $('place-results'), seq = ++searchSeq;
@@ -749,7 +750,7 @@ window.addEventListener('hashchange', () => { if (restore()) { renderRotation();
 const loadDemo = () => { state.crops = DEMO_CROPS; state.placeName = 'Bărăgan Plain, Romania'; $('area').value = DEMO_AREA; renderRotation(); return setField(DEMO.lat, DEMO.lon, 7); };
 $('see-example').addEventListener('click', loadDemo);
 $('l-plan').addEventListener('click', () => { state.planKey = state.landingPick; loadDemo(); });
-$('place').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchPlace, 500); });
+$('place').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(searchPlace, 1000); });
 $('place-results').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;

@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Season-by-season plan for one rotation on a farm split into blocks. Pure: reads layout() and the
 // crop calendar, never the weather. Months are model months (index 6 = mid-summer in both hemispheres).
 import { CROPS } from './crops.js';

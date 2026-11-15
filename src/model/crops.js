@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Loads data/crops.json (the one crop table) and flattens it for the model.
 // CROPS[id].kc is the plain value; CROPS[id].src.kc is { source, confidence, note } for the UI.
 const url = new URL('../../data/crops.json', import.meta.url);

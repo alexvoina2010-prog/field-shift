@@ -4,7 +4,7 @@
 
 | Dataset | Used for | How accessed |
 |---|---|---|
-| NASA POWER daily point API, community AG (MERRA-2 meteorology, CERES radiation): T2M_MAX, T2M_MIN, PRECTOTCORR, GWETROOT, ALLSKY_SFC_SW_DWN, WS2M, T2MDEW, 2000–2025 | Weather record replayed by the backtest; climate tiles | Live in the browser for any clicked point; saved to `data/demo_field.json` for the demo field by `scripts/fetch_demo.mjs` |
+| NASA POWER daily point API v2.10.3, community AG (MERRA-2 meteorology, CERES SYN1deg and GEWEX SRB radiation): T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, WS2M, T2MDEW, 2000–2025 (GWETROOT is also requested but not used in any result) | Weather record replayed by the backtest; climate tiles | Live in the browser for any clicked point; saved to `data/demo_field.json` for the demo field by `scripts/fetch_demo.mjs` |
 | NASA GIBS WMTS: `MODIS_Terra_L3_NDVI_Monthly` | Vegetation map layer | Live tiles |
 | NASA GIBS WMTS: `SMAP_L4_Analyzed_Root_Zone_Soil_Moisture` | Soil moisture map layer | Live tiles |
 | NASA GIBS WMTS: `IMERG_Precipitation_Rate` | Rainfall map layer | Live tiles |
@@ -48,6 +48,8 @@ Parameters with no citation (sowing and flowering months, heat limits, return in
 - Landing photograph: combine harvester by Ermell, CC BY-SA 4.0, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg). A stand-in, not the demo field.
 
 ## Use of AI tools
+
+Summary and disclosure locations: [AI-USAGE.md](AI-USAGE.md).
 
 - Claude (Anthropic), through Claude Code, was used to write and review the application code, tests and documentation, and to read parameter values out of the FAO-56 online tables. Alex directed the product, scope and decisions.
 - Claude also drafted the submission text and the video script from numbers the app computes, and found the public source for the 2024 drought figure by web search.

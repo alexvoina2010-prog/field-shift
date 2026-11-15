@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Turns NASA POWER daily data into monthly records and a plain climate summary.
 export const START_YEAR = 2000;
 export const END_YEAR = 2025;

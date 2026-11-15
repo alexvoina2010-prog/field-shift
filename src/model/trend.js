@@ -1,3 +1,4 @@
+// AI disclosure: written with Claude Code (Anthropic AI coding assistant) under the author's direction; see AI-USAGE.md.
 // Trend test for one value per year: Mann-Kendall (is there a monotonic trend?) and Sen's slope
 // (how fast). Non-parametric, so one extreme year does not create or hide a trend.
 
