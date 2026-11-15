@@ -261,6 +261,15 @@ function renderStrategies() {
     .filter((id) => id in CROPS && ($('livestock').checked || !CROPS[id].forage));
   const { cur, alts } = suggest(current, allowed, ctx, weights);
   const top = alts.reduce((m, a) => (a.total > m.total ? a : m), cur);
+  if (rainPct || dT) {
+    // Stress test: say whether the adjusted weather changes which option scores highest.
+    const b = suggest(current, allowed, { ...ctx, mo: state.base, clim: summarize(state.base).clim }, weights);
+    const name = (c) => c.rot.crops.map((id) => CROPS[id].name).join(' → ') + (c.rot.cover ? ' with cover crops' : '');
+    const was = name(b.alts.reduce((m, a) => (a.total > m.total ? a : m), { ...b.cur, rot: current })), now = name({ rot: current, ...top });
+    note.textContent += was === now
+      ? ` The ranking holds: ${now} still scores highest.`
+      : ` The ranking flips: on the recorded weather ${was} scored highest; in this scenario ${now} does.`;
+  }
   $('cards').innerHTML = [{ rot: current, ev: cur.ev, total: cur.total }, ...alts].map((c) => card(c, cur, ctx, c === top && c.kind)).join('') +
     (top === cur ? '<p class="warn">For these priorities, none of the alternatives scores higher than what you grow now.</p>' : '');
 }
