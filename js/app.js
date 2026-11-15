@@ -10,6 +10,7 @@ import { farmYears, moneySummary, equalBlocks } from '../src/model/money.js';
 import { GOALS, sortByGoals } from '../src/model/goals.js';
 import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
 import { loadFarm, saveFarm, clearFarm } from './store.js';
+import { decisionTable, change } from './table.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -309,16 +310,6 @@ function calendar(ev, shift) {
 const list = (items) => `<ul>${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
 const NO_RISK = 'The replay flags no specific risk. Still review any change with a local agronomist.';
 
-// One row per option, best first; the bar is the existing 0-100 score.
-function ranking(options, cur) {
-  return options.map((c) => {
-    const d = score(c) - score(cur);
-    return `<li${c.kind ? '' : ' class="now"'}><span class="rk-name">${esc(title(c).title)}${c.kind ? '' : ' <em>You now</em>'}</span>
-      <span class="track"><i style="width:${score(c)}%"></i></span>
-      <span class="rk-n">${seasonsOk(c)}</span><span class="rk-d">${!c.kind ? '' : d > 0 ? `+${d}` : d < 0 ? `−${-d}` : '±0'}</span></li>`;
-  }).join('');
-}
-
 function card(c, i, cur, ctx, best) {
   const t = explain(c, cur.ev, ctx), d = score(c) - score(cur);
   const delta = !c.kind ? '' : d > 0 ? `<span>▲ ${d} better than now</span>` : d < 0 ? `<span>▼ ${-d} lower than now</span>` : '<span>same as now</span>';
@@ -330,7 +321,7 @@ function card(c, i, cur, ctx, best) {
   const chips = t.benefits.map((x) => `<li class="good">+ ${esc(x)}</li>`).concat(t.tradeoffs.map((x) => `<li class="warnc">− ${esc(x)}</li>`)).join('');
   const evidenceItem = (e) => `<li>${esc(e.text)}<span class="src">${esc(e.source)}; confidence: <span class="conf">${esc(e.conf)}</span></span></li>`;
   const { level, reasons, short } = t.confidence;
-  return `<article class="card${c.kind ? '' : ' current'}${best ? ' best' : ''}">
+  return `<article class="card${c.kind ? '' : ' current'}${best ? ' best' : ''}" id="card-${i}">
     <h3>${esc(t.title)}</h3>
     <p class="tag">${!c.kind ? 'You now' : best ? 'Best match for you' : KIND_TAG[c.kind]}</p>
     <p class="badge ${level.toLowerCase()}">${level}: ${esc(short)}</p>
@@ -428,9 +419,9 @@ function renderOptions() {
   }
   const goalText = state.goals.length ? state.goals.map((g) => GOALS[g].toLowerCase()).join(' and ') : 'the five model scores';
   $('answer').textContent = top.kind
-    ? `Best match for ${goalText}: ${title(top).title.toLowerCase()}. In a bad year (the worst one in five) your estimate is ${money(top.money.bad)}, against ${money(now.money.bad)} for what you grow now.`
+    ? `Best match for ${goalText}: ${change(top).replace(/^./, (m) => m.toLowerCase())}.`
     : `For ${goalText}, none of the alternatives beats what you grow now.`;
-  $('ranking').innerHTML = ranking(options, now);
+  $('ranking').innerHTML = decisionTable(options, now, state.goals);
   $('cards').innerHTML = options.map((c, i) => card(c, i, now, ctx, c === top && c.kind)).join('');
   const ids = [...new Set(options.flatMap((o) => o.rot.crops))];
   if (ids.join() !== state.costIds) { $('costs').innerHTML = costsPanel(ids, state.econ); state.costIds = ids.join(); } // keep focus while typing
@@ -563,6 +554,12 @@ for (const id of ['cover', 'livestock', 'allowed']) $(id).addEventListener('chan
 for (const name of ['soil', 'slope', 'irrigation']) for (const el of document.querySelectorAll(`input[name=${name}]`)) el.addEventListener('change', renderOptions);
 $('cards').addEventListener('click', (e) => { if (e.target.dataset.pick != null) $('pick').value = e.target.dataset.pick; });
 $('pick').addEventListener('change', renderReport);
+$('ranking').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-plan]');
+  if (!a) return;
+  e.preventDefault();
+  $(`card-${a.dataset.plan}`)?.scrollIntoView({ behavior: 'smooth' });
+});
 $('print').addEventListener('click', () => window.print());
 
 if (!new URLSearchParams(location.hash.split('?')[1] ?? '').size) applyFarm(loadFarm()); // a shared link wins over the saved farm

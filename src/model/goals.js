@@ -18,6 +18,17 @@ export const newMachinery = (rot, current) => {
   return [...new Set(rot.crops.flatMap((id) => CROPS[id].machinery))].filter((m) => !have.has(m));
 };
 
+/**
+ * Crop seasons in trouble at flowering, over every crop of the rotation: heat-hit, short of water, or
+ * either. Same definitions as the backtest counts (HEAT_DAYS, STRESS_SHARE in rotation.js).
+ * @returns {{any:number, heat:number, water:number, total:number}} counts of crop seasons
+ */
+export function troubleCount(ev, heatDays, stressShare) {
+  const all = ev.facts.crops.flatMap((c) => c.list);
+  const hot = (s) => s.hot >= heatDays, dry = (s) => s.stress >= stressShare * s.days;
+  return { any: all.filter((s) => hot(s) || dry(s)).length, heat: all.filter(hot).length, water: all.filter(dry).length, total: all.length };
+}
+
 export const workloadOf = (rot) => rot.crops.reduce((s, id) => s + WORKLOAD[CROPS[id].workload], 0) / rot.crops.length;
 
 /**
