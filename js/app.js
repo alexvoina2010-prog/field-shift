@@ -49,7 +49,7 @@ const LAYERS = {
 // The map sits in a scrolling step: the wheel must scroll the page, not zoom the map.
 const map = L.map('map', { scrollWheelZoom: false }).setView([+$('lat').value, +$('lon').value], 7);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 15, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-const marker = L.circleMarker(map.getCenter(), { radius: 9, color: '#1f3d2b', weight: 3, fillColor: '#eda100', fillOpacity: 1 }).addTo(map);
+const marker = L.circleMarker(map.getCenter(), { radius: 9, weight: 3, fillOpacity: 1, className: 'field-marker' }).addTo(map);
 let overlay = null;
 
 function setOverlay() {
@@ -145,7 +145,7 @@ function loadField() {
 // ---------- landing ----------
 // The demo answer, computed from the saved Bărăgan record with the default inputs. No number is typed in.
 async function renderLanding() {
-  $('l-eyebrow').textContent = `Tested on ${END_YEAR - START_YEAR + 1} years of NASA weather`;
+  $('l-eyebrow').textContent = `A farm near Slobozia grows wheat, then maize, then sunflower. Replayed on NASA weather, ${START_YEAR} to ${END_YEAR}.`;
   try {
     const { p, elev } = await fetchPower(DEMO.lat, DEMO.lon);
     const mo = toMonthly(p, DEMO.lat, undefined, elev), at = DEMO_CROPS.indexOf('sunflower');
@@ -153,12 +153,15 @@ async function renderLanding() {
     const allowed = Object.keys(CROPS).filter((id) => !CROPS[id].forage);
     const { cur, alts } = suggest({ crops: DEMO_CROPS, cover: false }, allowed, ctx, Object.fromEntries(METRICS.map((k) => [k, 1])));
     const now = cur.ev.facts.crops[at], swap = alts.find((a) => a.kind === 'swap' && a.at === at);
-    $('l-head').innerHTML = `A farm near Slobozia grows wheat → maize → sunflower. Its sunflower flowered in a heatwave in <b>${now.hot} of ${now.n}</b> summers.`;
+    const seasons = (f) => `${f.hot} <small>of ${f.n} summers</small>`;
+    $('l-now').innerHTML = seasons(now);
     if (swap) {
-      const x = swap.ev.facts.crops[at];
-      $('l-swap').innerHTML = `Swapping it for ${esc(CROPS[swap.id].name.toLowerCase())}: <b>${x.hot} of ${x.n}</b>.`;
+      $('l-swap-name').textContent = `${CROPS[swap.id].name} instead`;
+      $('l-swap').innerHTML = seasons(swap.ev.facts.crops[at]);
+      $('l-swap-row').hidden = false;
     }
-  } catch { /* the plain headline already in the page stays; "Check my field" still works */ }
+    $('ledger').hidden = false;
+  } catch { /* the ledger stays hidden; the headline and "Check my field" still work */ }
 }
 
 // ---------- climate ----------
@@ -212,7 +215,7 @@ function renderClimate() {
     `Rain averages ${Math.round(s.annualRain)} mm a year; a well-watered crop could use ${Math.round(s.annualEt0)} mm. ` +
     `The three boxes test ${y[0]}–${y.at(-1)} for a trend: what happened, not a forecast.`];
   if (saved) notes.push(`Demo field: NASA POWER record saved on ${saved}, so it loads without a live connection to NASA.`);
-  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) notes.push('⚠ This point is outside the temperate latitudes (35°–60°) the crop calendar was written for. Sowing and flowering months may not match local practice, so treat the rotation results as illustrative only.');
+  if (Math.abs(lat) < 35 || Math.abs(lat) > 60) notes.push('This point is outside the temperate latitudes (35°–60°) the crop calendar was written for. Sowing and flowering months may not match local practice, so treat the rotation results as illustrative only.');
   $('climate-note').textContent = notes.join(' ');
   $('tiles').innerHTML = [
     fact(`Days of ${HOT_DAY} °C or more, per year`, s.series.hotDays, ' days', 1),
@@ -235,8 +238,8 @@ const WEIGHT_HINTS = {
 };
 // Step 3 cards. A picked card sets its slider to PICKED, the others to UNPICKED; the sliders stay the source of truth.
 const PRIORITIES = {
-  water: '💧 Enough water at flowering', heat: '☀️ No heatwave at flowering', frost: '❄️ No frost after sowing',
-  erosion: '🌧 Soil covered when storms hit', nitrogen: '🌿 Crops that feed the soil',
+  water: 'Enough water at flowering', heat: 'No heatwave at flowering', frost: 'No frost after sowing',
+  erosion: 'Soil covered when storms hit', nitrogen: 'Crops that feed the soil',
 };
 const PICKED = 3, UNPICKED = 1, MAX_PICKS = 2;
 const IRRIGATION = { none: 'No irrigation', some: 'Sometimes', full: 'Fully irrigated' };
@@ -250,7 +253,7 @@ function renderRotation() {
 }
 
 function buildControls() {
-  $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${cropLabel(id)[0]} ${esc(c.name)}</label>`).join('');
+  $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${esc(c.name)}</label>`).join('');
   $('prio').insertAdjacentHTML('beforeend', METRICS.map((k) => `<label><input type="checkbox" name="prio" value="${k}"> ${esc(PRIORITIES[k])}</label>`).join(''));
   $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])} <output id="wo-${k}"></output>
     <span class="src">${esc(WEIGHT_HINTS[k])}</span>
@@ -269,8 +272,8 @@ const seasonsOk = (c) => `${Math.round(score(c) / 10)} of 10 seasons OK`;
 
 function calendar(ev, shift) {
   const { slots } = ev.lay, N = slots.length;
-  const info = (s) => (!s ? { key: 'bare', cls: 'bare', name: 'Bare soil', label: ['▒', 'bare'] }
-    : s.cover ? { key: 'cover', cls: 'cover', name: 'Cover crop', label: ['🌱', 'Cover'] }
+  const info = (s) => (!s ? { key: 'bare', cls: 'bare', name: 'Bare soil', label: ['', 'Bare'] }
+    : s.cover ? { key: 'cover', cls: 'cover', name: 'Cover crop', label: ['Cov', 'Cover'] }
     : { key: `c${s.i}`, cls: CROPS[ev.rot.crops[s.i]].legume ? 'legume' : 'crop', name: CROPS[ev.rot.crops[s.i]].name, label: cropLabel(ev.rot.crops[s.i]) });
   const segs = [];
   slots.forEach((s, m) => {
@@ -278,8 +281,8 @@ function calendar(ev, shift) {
     if (last && last.key === it.key) last.len++; else segs.push({ ...it, start: m, len: 1 });
   });
   const span = (g) => `${monthName(g.start % 12, shift)}–${monthName((g.start + g.len - 1) % 12, shift)}`;
-  // Room for a label on a 300 px wide card: emoji + letters need about 56 px, the emoji alone 22 px.
-  const text = (g) => { const px = (300 * g.len) / N; return px >= 56 ? g.label.join(' ') : px >= 22 ? g.label[0] : ''; };
+  // Room for a label on a 300 px wide card: a full crop name needs about 72 px, three letters 26 px.
+  const text = (g) => { const px = (300 * g.len) / N; return px >= 72 ? g.label[1] : px >= 26 ? g.label[0] : ''; };
   const cols = `style="grid-template-columns:repeat(${N},1fr)"`;
   const years = ev.rot.crops.map((_, i) => `<span style="grid-column:span 12">Year ${i + 1}</span>`).join('');
   // One letter per quarter: 36 letters of readable size do not fit a phone.
@@ -310,13 +313,13 @@ function card(c, i, cur, ctx, best) {
     const ch = !c.kind || dv === 0 ? '' : ` <b>${dv > 0 ? '+' : '−'}${Math.abs(dv)}</b>`;
     return `<div class="metric"><span>${esc(LABELS[k])}</span><span class="track"><i style="width:${v}%"></i></span><span class="n">${v}${ch}</span></div>`;
   }).join('');
-  const chips = t.benefits.map((x) => `<li class="good">✓ ${esc(x)}</li>`).concat(t.tradeoffs.map((x) => `<li class="warnc">⚠ ${esc(x)}</li>`)).join('');
-  const evidenceItem = (e) => `<li>${esc(e.text)}<span class="src">${esc(e.source)} · confidence: <span class="conf">${esc(e.conf)}</span></span></li>`;
+  const chips = t.benefits.map((x) => `<li class="good">+ ${esc(x)}</li>`).concat(t.tradeoffs.map((x) => `<li class="warnc">− ${esc(x)}</li>`)).join('');
+  const evidenceItem = (e) => `<li>${esc(e.text)}<span class="src">${esc(e.source)}; confidence: <span class="conf">${esc(e.conf)}</span></span></li>`;
   const { level, reasons, short } = t.confidence;
   return `<article class="card${c.kind ? '' : ' current'}${best ? ' best' : ''}">
-    <span class="tag">${!c.kind ? 'You now' : best ? 'Best match for you' : KIND_TAG[c.kind]}</span>
     <h3>${esc(t.title)}</h3>
-    <p class="badge ${level.toLowerCase()}">${level === 'Low' ? '⚠ ' : ''}${level}: ${esc(short)}</p>
+    <p class="tag">${!c.kind ? 'You now' : best ? 'Best match for you' : KIND_TAG[c.kind]}</p>
+    <p class="badge ${level.toLowerCase()}">${level}: ${esc(short)}</p>
     <p class="key">${esc(t.key)}</p>
     ${chips ? `<ul class="chips">${chips}</ul>` : ''}
     ${calendar(c.ev, ctx.mo.shift)}
@@ -417,7 +420,7 @@ function renderReport() {
   const shared = [...document.querySelectorAll('#shared li')].map((li) => li.textContent); // said once in the page, reused here
   const box = (items) => `<ul class="todo">${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`;
   $('report').innerHTML = `
-    <p class="src">Field at ${lat.toFixed(2)}°, ${lon.toFixed(2)}° · ${esc(picked('soil'))} soil, ${esc(picked('slope'))} slope · ${esc(IRRIGATION[picked('irrigation')].toLowerCase())} · replayed on NASA POWER weather ${r.ctx.mo.years[0]}–${r.ctx.mo.years.at(-1)}</p>
+    <p class="src">Field at ${lat.toFixed(2)}°, ${lon.toFixed(2)}°; ${esc(picked('soil'))} soil, ${esc(picked('slope'))} slope; ${esc(IRRIGATION[picked('irrigation')].toLowerCase())}. Replayed on NASA POWER weather, ${r.ctx.mo.years[0]} to ${r.ctx.mo.years.at(-1)}.</p>
     <p><b>Grown now:</b> ${esc(rotName(r.now.rot))} (${seasonsOk(r.now)})</p>
     <p><b>Option to discuss:</b> ${esc(t.title)}${c.kind ? `: ${esc(rotName(c.rot))}` : ''} (${seasonsOk(c)})</p>
     <p class="key">${esc(t.key)}</p>

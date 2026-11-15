@@ -41,7 +41,7 @@ function bands(lay, shift) {
       if (last && last.key === it.key) last.len++; else segs.push({ ...it, start: m, len: 1 });
     }
     return `<div class="rb-row"><span class="rb-y">Year ${i + 1}</span>${segs.map((g) =>
-      `<span class="seg ${g.cls}" style="grid-column:span ${g.len}" title="${esc(g.name)}: ${monthName(g.start, shift)}–${monthName(g.start + g.len - 1, shift)}">${g.id && g.len >= 2 ? cropLabel(g.id).slice(0, g.len >= 4 ? 2 : 1).join(' ') : g.key === 'cover' && g.len >= 2 ? '🌱' : ''}</span>`).join('')}</div>`;
+      `<span class="seg ${g.cls}" style="grid-column:span ${g.len}" title="${esc(g.name)}: ${monthName(g.start, shift)}–${monthName(g.start + g.len - 1, shift)}">${g.id ? cropLabel(g.id)[g.len >= 3 ? 1 : 0] : g.key === 'cover' && g.len >= 2 ? 'Cover' : ''}</span>`).join('')}</div>`;
   });
   const flowering = Array.from({ length: 12 }, (_, m) => [...new Set(lay.crops)].filter((id) => CROPS[id].flower.includes(m + 1)).map((id) => CROPS[id].name));
   rows.push(`<div class="rb-row rb-flower"><span class="rb-y">Flowering</span>${flowering.map((names) =>

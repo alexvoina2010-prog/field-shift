@@ -6,26 +6,48 @@
   <title>BioShift: crop rotations with NASA data</title>
   <meta name="description" content="Compare crop rotation options for your field using 26 years of NASA climate data.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="#start">BioShift</a>
+  <a class="brand" href="#start" aria-label="BioShift, start">
+    <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect class="sky" x="0" y="0" width="26" height="7"/><rect class="wheat" x="7" y="9.5" width="19" height="7"/><rect class="soil" x="0" y="19" width="26" height="7"/></svg>
+    BioShift
+  </a>
   <a href="#how">How it works</a>
 </header>
 <p id="status" role="status" aria-live="polite"></p>
 
 <main>
   <!-- 0 Landing: the demo answer, computed from the saved Bărăgan record -->
-  <section data-step="start" class="narrow landing">
-    <p class="eyebrow" id="l-eyebrow">Tested on NASA weather</p>
-    <h1 id="l-head" tabindex="-1">A farm near Slobozia grows wheat → maize → sunflower.</h1>
-    <p class="l-swap" id="l-swap"></p>
-    <p class="hint">Not a forecast and not a recommendation: a replay of what NASA recorded.</p>
-    <div class="actions">
-      <a class="btn primary" href="#field">Check my field</a>
-      <a href="#options" id="see-example">See the full example</a>
+  <section data-step="start" class="landing">
+    <div>
+      <h1 id="l-head" tabindex="-1">Your rotation, replayed on NASA weather.</h1>
+      <p class="lede">Not a forecast or a recommendation: a replay of what NASA recorded.</p>
+      <div class="actions">
+        <a class="btn primary" href="#field">Check my field</a>
+        <a href="#options" id="see-example">See the full example</a>
+      </div>
+      <figure class="ledger" id="ledger" hidden>
+        <figcaption id="l-eyebrow">A farm near Slobozia grows wheat, then maize, then sunflower.</figcaption>
+        <table>
+          <thead><tr><th scope="col">Third crop</th><th scope="col" class="num">Flowered in a heatwave</th></tr></thead>
+          <tbody>
+            <tr><td>Sunflower, as now</td><td class="num" id="l-now"></td></tr>
+            <tr class="pick" id="l-swap-row" hidden><td id="l-swap-name"></td><td class="num" id="l-swap"></td></tr>
+          </tbody>
+        </table>
+      </figure>
     </div>
+    <figure class="photo" data-slot="hero" data-alt="A grain harvest at working distance">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/960px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg/1280px-Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg 1280w" sizes="(min-width: 60rem) 40vw, 100vw" width="5184" height="3888" alt="A combine harvester unloading grain into a tractor trailer in a cloud of dust" style="object-position: 55% 55%" fetchpriority="high">
+    </figure>
   </section>
 
   <!-- 1 Where is your field? -->
@@ -36,7 +58,7 @@
     <input id="place" type="search" autocomplete="off" placeholder="for example Slobozia">
     <ul id="place-results" class="results" aria-live="polite"></ul>
     <p class="hint">Search © OpenStreetMap contributors. Or tap the map.</p>
-    <button type="button" id="locate">📍 Use my location</button>
+    <button type="button" id="locate">Use my location</button>
     <div id="map" role="application" aria-label="Map. Tap to choose your field."></div>
     <p class="hint" id="layer-note">Tap the map to move the field marker.</p>
     <details>
@@ -68,22 +90,22 @@
 
     <fieldset class="picks">
       <legend>Soil</legend>
-      <label><input type="radio" name="soil" value="sandy"><span aria-hidden="true">🏜️</span> Sandy, drains fast</label>
-      <label><input type="radio" name="soil" value="loam" checked><span aria-hidden="true">🌱</span> Loam, in between</label>
-      <label><input type="radio" name="soil" value="clay"><span aria-hidden="true">🧱</span> Clay, holds water</label>
+      <label><input type="radio" name="soil" value="sandy">Sandy, drains fast</label>
+      <label><input type="radio" name="soil" value="loam" checked>Loam, in between</label>
+      <label><input type="radio" name="soil" value="clay">Clay, holds water</label>
     </fieldset>
     <p class="hint">Not sure? A soil test beats a guess. Ask your agronomist.</p>
     <fieldset class="picks">
       <legend>Slope</legend>
-      <label><input type="radio" name="slope" value="flat"><span aria-hidden="true">➖</span> Flat</label>
-      <label><input type="radio" name="slope" value="gentle" checked><span aria-hidden="true">↗️</span> Gentle slope</label>
-      <label><input type="radio" name="slope" value="steep"><span aria-hidden="true">⛰️</span> Steep slope</label>
+      <label><input type="radio" name="slope" value="flat">Flat</label>
+      <label><input type="radio" name="slope" value="gentle" checked>Gentle slope</label>
+      <label><input type="radio" name="slope" value="steep">Steep slope</label>
     </fieldset>
     <fieldset class="picks">
       <legend>Can you irrigate?</legend>
-      <label><input type="radio" name="irrigation" value="none" checked><span aria-hidden="true">🌦️</span> No irrigation</label>
-      <label><input type="radio" name="irrigation" value="some"><span aria-hidden="true">🚿</span> Sometimes</label>
-      <label><input type="radio" name="irrigation" value="full"><span aria-hidden="true">💧</span> Fully irrigated</label>
+      <label><input type="radio" name="irrigation" value="none" checked>No irrigation</label>
+      <label><input type="radio" name="irrigation" value="some">Sometimes</label>
+      <label><input type="radio" name="irrigation" value="full">Fully irrigated</label>
     </fieldset>
     <div class="actions">
       <a class="btn primary" href="#crops">Next</a>
@@ -170,7 +192,7 @@
     <ul class="legend" aria-label="Calendar legend">
       <li><span class="sw crop"></span>Crop</li>
       <li><span class="sw legume"></span>Legume crop</li>
-      <li><span class="sw cover"></span>🌱 Cover crop</li>
+      <li><span class="sw cover"></span>Cover crop</li>
       <li><span class="sw bare"></span>Bare soil</li>
       <li>The calendar is a loop: what runs off the right edge continues on the left.</li>
     </ul>
@@ -230,7 +252,7 @@
     <p>BioShift replays the weather NASA recorded for your field since 2000 against your rotation and a few alternatives, and counts how often each would have been in trouble. It supports, it does not replace, your judgment or a local agronomist.</p>
     <h3>Data and method</h3>
     <ul>
-      <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000–2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
+      <li><strong>Climate:</strong> <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER daily data</a> 2000 to 2025 (temperature, rainfall, solar radiation, wind, humidity, root-zone soil wetness), from NASA's <a href="https://gmao.gsfc.nasa.gov/gmao-products/merra-2/">MERRA-2</a> and <a href="https://ceres.larc.nasa.gov/">CERES</a> products.</li>
       <li><strong>Map layers:</strong> <a href="https://nasa-gibs.github.io/gibs-api-docs/">NASA GIBS</a>: <a href="https://www.earthdata.nasa.gov/data/instruments/modis">MODIS</a> Terra NDVI (monthly), <a href="https://smap.jpl.nasa.gov/">SMAP</a> Level-4 root-zone soil moisture, <a href="https://gpm.nasa.gov/data/imerg">GPM IMERG</a> precipitation rate.</li>
       <li><strong>Place search:</strong> OpenStreetMap Nominatim. Only the place name you type is sent.</li>
       <li><strong>Crop water demand:</strong> FAO-56 Penman-Monteith reference evapotranspiration multiplied by FAO-56 crop coefficients, run day by day through an FAO-56 root-zone water balance. Soil water capacity comes from the soil type (FAO-56 Table 19) and the crop's rooting depth (Table 22); runoff on heavy-rain days uses the USDA curve number method.</li>
@@ -238,13 +260,13 @@
       <li><strong>"Heatwave at flowering":</strong> 5 or more days above the crop's heat limit while it flowers.</li>
       <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>
       <li><strong>"What matters most":</strong> a picked priority counts three times as much as one not picked. "Fine-tune" shows and changes the exact weights.</li>
-      <li><strong>"N of 10 seasons OK":</strong> the 0–100 score divided by ten and rounded.</li>
-      <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35°–60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
+      <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 score divided by ten and rounded.</li>
+      <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35° to 60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>
       <li><strong>Soil organic matter</strong> is a qualitative note from months of bare soil and cover crops, not a measurement or a score.</li>
       <li><strong>Trends:</strong> Mann-Kendall test with Sen's slope on one value per year. "How sure: strong" means p is below 0.05; "weak" means p between 0.05 and 0.1; otherwise no trend is claimed.</li>
       <li><strong>Heavy-rain days:</strong> days with 10 mm or more (the standard R10mm index).</li>
       <li><strong>Crop table:</strong> <code>data/crops.json</code>. Crop coefficients, stage lengths, rooting depths and depletion fractions are FAO-56 table values. Sowing and flowering months, heat limits and return intervals are assumptions with low confidence, and are labelled as such.</li>
-      <li><strong>Scores:</strong> five 0–100 scores per rotation, each a count over replayed seasons or years, combined as a weighted average using your priorities. The formulas are in <code>src/model/rotation.js</code>.</li>
+      <li><strong>Scores:</strong> five 0 to 100 scores per rotation, each a count over replayed seasons or years, combined as a weighted average using your priorities. The formulas are in <code>src/model/rotation.js</code>.</li>
       <li><strong>Stress test "Hotter and 20 % drier":</strong> every day 1.5 °C warmer and every rainfall 20 % smaller.</li>
     </ul>
     <h3>Words used on this page</h3>
@@ -267,6 +289,7 @@
 
 <footer>
   <p>A tool for exploring options. It supports, it does not replace, your judgment or a local agronomist. Built for the 2026 NASA Space Apps Challenge, "Field Shift: Adapting Farms with NASA Data". NASA does not endorse this tool.</p>
+  <p>Photograph: <a href="https://commons.wikimedia.org/wiki/File:Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg">Ermell</a> (CC BY-SA 4.0, Wikimedia Commons).</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>

@@ -38,10 +38,13 @@ Parameters with no citation (sowing and flowering months, heat limits, return in
 - Leaflet 1.9.4 (map), loaded from cdnjs with subresource integrity.
 - No chart library: charts are hand-written SVG.
 - Node.js built-in test runner for unit tests.
+- Fonts from Google Fonts (SIL Open Font License): Newsreader (headings), Hanken Grotesk (text), IBM Plex Mono (figures).
+- Landing photograph: combine harvester by Ermell, CC BY-SA 4.0, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Fr%C3%A4nkische_Schweiz_Getreideernte-20210821-RM-154445.jpg). A stand-in, not the demo field.
 
 ## Use of AI tools
 
 - Claude (Anthropic), through Claude Code, was used to write and review the application code, tests and documentation, and to read parameter values out of the FAO-56 online tables. Alex directed the product, scope and decisions.
 - Claude also drafted the submission text and the video script from numbers the app computes, and found the public source for the 2024 drought figure by web search.
+- The visual identity (palette, type, the three-band BioShift mark, page layout) was redesigned with Claude Code and the Hallmark design skill, on Alex's choices of tone and colour.
 - No AI model runs inside the app. All results come from the NASA data and the published formulas above.
 - No AI-generated images, and no NASA logos or insignia, are used.

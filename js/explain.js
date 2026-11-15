@@ -9,12 +9,9 @@ export const LABELS = {
 };
 // Short chip labels for the same five scores.
 const SHORT = { water: 'Water', heat: 'Heat safety', frost: 'Frost safety', erosion: 'Soil cover', nitrogen: 'Nitrogen' };
-// Calendar labels: emoji + three letters, so nothing is truncated on a phone.
-const ICONS = {
-  wheat: ['🌾', 'Wht'], barley: ['🌾', 'Bar'], rapeseed: ['🌼', 'Rap'], maize: ['🌽', 'Mze'], sunflower: ['🌻', 'Sun'],
-  sorghum: ['🌾', 'Sor'], soybean: ['🌿', 'Soy'], pea: ['🌿', 'Pea'], chickpea: ['🌿', 'Chk'], alfalfa: ['☘️', 'Alf'],
-};
-export const cropLabel = (id) => ICONS[id] ?? ['🌱', CROPS[id].name.slice(0, 3)];
+// Calendar labels: [three letters, full name], so narrow segments still read on a phone.
+const ABBR = { wheat: 'Wht', barley: 'Bar', rapeseed: 'Rap', maize: 'Mze', sunflower: 'Sun', sorghum: 'Sor', soybean: 'Soy', pea: 'Pea', chickpea: 'Chk', alfalfa: 'Alf' };
+export const cropLabel = (id) => [ABBR[id] ?? CROPS[id].name.slice(0, 3), CROPS[id].name];
 const NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 // Model months are shifted by 6 south of the equator; shift back for display.
 export const monthName = (m0, shift = 0) => NAMES[(((m0 - shift) % 12) + 12) % 12];
