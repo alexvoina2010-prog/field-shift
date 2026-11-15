@@ -57,6 +57,12 @@
     <button type="button" id="locate">Use my location</button>
     <div id="map" role="application" aria-label="Map. Tap to choose your field."></div>
     <p class="hint" id="layer-note">Tap the map to move the field marker.</p>
+    <div class="draw-row">
+      <button type="button" id="draw-start">Draw your field</button>
+      <button type="button" class="btn primary" id="draw-done" hidden>Done</button>
+      <button type="button" id="draw-clear" hidden>Clear outline</button>
+    </div>
+    <p class="hint" id="draw-note" role="status" aria-live="polite">Weather comes from NASA's grid for your area (about 50 km); the outline gives your farm size.</p>
     <details>
       <summary>More map layers</summary>
       <fieldset class="layers" id="layers">
@@ -105,9 +111,9 @@
     </fieldset>
     <fieldset id="farm-size">
       <legend>How big is the farm?</legend>
-      <label for="area">Farm size, hectares</label>
+      <label for="area">Or type the size: hectares</label>
       <input id="area" type="number" inputmode="decimal" min="1" max="100000" step="any" value="120">
-      <p class="hint">Used for whole-farm money. Weather comes from NASA's grid for your area (about 50 km); the size only scales the money.</p>
+      <p class="hint">Used for whole-farm money and block sizes. Drawing your field above fills it in.</p>
     </fieldset>
     <div class="actions">
       <a class="btn primary" href="#crops">Next</a>
@@ -160,6 +166,7 @@
   <section data-step="options" hidden>
     <h2 tabindex="-1">Your options</h2>
     <p class="answer" id="answer"></p>
+    <div id="farm-strips"></div>
     <div class="stress" id="stress">
       <span class="label">Stress test</span>
       <button type="button" data-rain="0" data-temp="0">Today's climate</button>
@@ -286,6 +293,7 @@
       <li><strong>Irrigation:</strong> the replay is rain-fed. "Sometimes" and "Fully irrigated" are treated the same: the field counts as irrigated, so the water count is shown but left out of the total.</li>
       <li><strong>Yield in each replayed season:</strong> FAO-33 yield response, 1 − Ya/Ym = Ky × (1 − ETa/ETc), over the whole season from sowing to harvest. ETc is what the crop would use with enough water (crop coefficient × reference ET); ETa is what the daily water balance let it use. Ky values come from FAO Irrigation and Drainage Paper 66, Table 1 (which reprints Paper 33): winter wheat 1.05, maize 1.25, sunflower 0.95, sorghum 0.9, soybean 0.85, peas 1.15, alfalfa 1.1. Barley, rapeseed and chickpea are not in that table; their Ky is an assumption and labelled so. Only water shortage lowers yield; heat at flowering is counted separately. A fully irrigated field gets no water loss (irrigation water and its cost are not modelled).</li>
       <li><strong>Money:</strong> profit per hectare = yield × your price − your five costs (seed, fertiliser, crop protection, machinery and fuel, labour). Starting values are examples for a rain-fed farm in South-East Romania, not market data. Whole-farm profit for each replayed year adds up every block: a rotation of N years on your farm is N equal blocks, each one year ahead of the next, so every crop is grown every year. "Normal year" is the median of the replayed years; "bad year" is the 20th percentile, the worst one year in five; "years with a loss" counts years below zero. It is your estimate, not a price or yield forecast.</li>
+      <li><strong>Your field outline and blocks:</strong> the outline you draw gives the farm size (area on the WGS84 sphere, the same formula as Leaflet.draw) and moves the weather point to its middle. Weather still comes from the NASA grid cell around it (about 50 km), so the outline changes the hectares, not the weather. Blocks start equal; the − and + buttons move 5 ha between blocks without changing the farm total. The map is not split; the blocks are a diagram.</li>
       <li><strong>Your goals:</strong> More profit (normal-year profit); Steadier income (bad-year profit, lowered by the share of loss years); Less work and machinery (workload of each crop, plus half a step for each machine the farm does not use now); Healthier soil (legume years, soil covered when heavy rain falls, fewer bare months); Use less water (how often crops were short of water at flowering). Each goal is scaled 0 to 1 across the options shown and the picked goals are averaged. Goals only order the options; the alternatives themselves are found with the model weights under "Fine-tune (advanced)", so the most profitable possible change may not be among them.</li>
       <li><strong>"N of 10 seasons OK":</strong> the 0 to 100 model score divided by ten and rounded.</li>
       <li><strong>Confidence badge:</strong> <em>Low</em> when a water-balance parameter of any crop in the rotation (crop coefficient, stage lengths, rooting depth, depletion fraction) is an assumption, when the field lies outside 35° to 60° latitude, or when a crop has fewer than 15 replayed seasons. <em>Medium</em> when all water-balance parameters are FAO-56 table values. <em>High</em> is not reachable yet: it needs sourced flowering months and heat limits and a second rainfall source agreeing within 20%.</li>

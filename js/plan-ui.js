@@ -76,6 +76,12 @@ function changes(plan, c, current, shift) {
   return out.sort((a, b) => a.ri - b.ri).map((x) => x.text);
 }
 
+/** Steppers to resize blocks; the total stays the farm size. */
+const steppers = (plan, step) => `<div class="steppers">${plan.blocks.map((b, i) => `<div class="stepper"><span>Block ${b.id} <b>${ha(b.ha)}</b></span>
+  <button type="button" data-block="${i}" data-ha="${-step}" aria-label="Block ${b.id}: ${step} ha smaller">−</button>
+  <button type="button" data-block="${i}" data-ha="${step}" aria-label="Block ${b.id}: ${step} ha larger">+</button></div>`).join('')}</div>
+  <p class="hint">Blocks start equal. Change their sizes with − and +: the farm total stays ${ha(plan.blocks.reduce((s, b) => s + b.ha, 0))} and the money above updates.</p>`;
+
 /** Block strips: widths proportional to hectares, labelled with this year's crop. */
 export function strips(plan, rot, year, startYear) {
   const n = rot.crops.length, total = plan.blocks.reduce((s, b) => s + b.ha, 0) || 1;
@@ -112,6 +118,7 @@ export function planHtml(c, now, o) {
     ${strips(plan, c.rot, o.startYear, o.startYear)}
     <p class="hint">This year (${o.startYear} harvest).</p>
     ${moneyBlock(c.money, o.area, c.kind ? now.money : null)}
+    ${o.step ? steppers(plan, o.step) : ''}
     ${ch.length ? `<h3>What changes against now</h3><ul class="plan-changes">${ch.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '<h3>What changes against now</h3><p>Nothing: this is what you grow now, laid out block by block.</p>'}
     <h3>Season by season</h3>
     <div class="plan-scroll"><table class="plan-table"><thead>${head}</thead><tbody>${body}</tbody></table></div>
@@ -120,6 +127,9 @@ export function planHtml(c, now, o) {
     ${qs.length ? `<ul class="todo">${qs.map((q) => `<li>${esc(q.text)}</li>`).join('')}</ul>` : '<p>No new crop and no crop that often flowered in trouble. Still review the plan with a local agronomist.</p>'}
     <p class="src">A plan laid out from the crop calendar, not advice. This tool supports, it does not replace, your judgment or a local agronomist.</p>`;
 }
+
+/** The farm this year under one option, as block strips (results page). */
+export const farmStrips = (c, blockHa, startYear) => strips(timeline(c.rot, blockHa, startYear), c.rot, startYear, startYear);
 
 /** Plain-text plan for WhatsApp. */
 export function planText(c, now, o) {

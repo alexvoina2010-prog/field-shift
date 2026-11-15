@@ -68,6 +68,19 @@ export function seasonOf(month0) {
 }
 
 /**
+ * Moves `step` hectares into block b (or out of it when step < 0), taken from the largest other
+ * block (or given to the smallest). The farm total never changes and no block goes below zero.
+ * @returns {number[]} new sizes
+ */
+export function moveHectares(sizes, b, step) {
+  const others = sizes.map((v, i) => ({ v, i })).filter((x) => x.i !== b);
+  if (!others.length) return sizes;
+  const pick = step > 0 ? others.reduce((m, x) => (x.v > m.v ? x : m)) : others.reduce((m, x) => (x.v < m.v ? x : m));
+  const amount = step > 0 ? Math.min(step, pick.v) : -Math.min(-step, sizes[b]);
+  return sizes.map((v, i) => (i === b ? v + amount : i === pick.i ? v - amount : v));
+}
+
+/**
  * Marks what differs from the current rotation: events of a crop the farm does not grow now, and
  * cover-crop sowings when the farm sows none now.
  */

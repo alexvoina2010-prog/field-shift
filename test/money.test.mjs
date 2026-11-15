@@ -53,6 +53,19 @@ test('percentile interpolates linearly; summary counts loss years', () => {
   assert.deepEqual(equalBlocks(3, 120), [40, 40, 40]);
 });
 
+test('block steppers keep the farm total and never go below zero', async () => {
+  const { moveHectares } = await import('../src/model/plan.js');
+  assert.deepEqual(moveHectares([40, 40, 40], 0, 5), [45, 35, 40]);
+  assert.deepEqual(moveHectares([45, 35, 40], 1, -5), [45, 30, 45]);
+  assert.deepEqual(moveHectares([0, 60, 60], 0, -5), [0, 60, 60]);
+});
+
+test('drawn outline area: a 0.01° square at the equator is about 123.6 ha', async () => {
+  const { geodesicArea } = await import('../js/draw.js');
+  const ha = geodesicArea([{ lat: 0, lng: 0 }, { lat: 0, lng: 0.01 }, { lat: 0.01, lng: 0.01 }, { lat: 0.01, lng: 0 }]) / 1e4;
+  assert.ok(Math.abs(ha - 123.6) < 1.5, `${ha}`); // (1113.2 m)² on the WGS84 sphere
+});
+
 test('picking "steadier income" ranks the option with the better bad year first', () => {
   const opt = (normal, bad, lossYears) => ({ rot: { crops: ['wheat'] }, total: 0.5,
     ev: { scores: { water: 0.5, nitrogen: 0, erosion: 0.5 }, facts: { bare: 3, n: 1 } }, money: { normal, bad, lossYears, n: 25 } });

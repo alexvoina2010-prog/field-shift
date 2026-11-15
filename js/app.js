@@ -11,7 +11,9 @@ import { GOALS, sortByGoals } from '../src/model/goals.js';
 import { costsPanel, applyInput, econsFor, sanitizeEcon, sumText, money, moneyBlock } from './money-ui.js';
 import { loadFarm, saveFarm, clearFarm } from './store.js';
 import { decisionTable, change } from './table.js';
-import { planHtml, planText } from './plan-ui.js';
+import { planHtml, planText, farmStrips } from './plan-ui.js';
+import { drawTool } from './draw.js';
+import { moveHectares } from '../src/model/plan.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -19,7 +21,7 @@ const picked = (name) => document.querySelector(`input[name=${name}]:checked`).v
 const setPicked = (name, value) => { const el = document.querySelector(`input[name=${name}][value="${value}"]`); if (el) el.checked = true; };
 const irrigated = () => picked('irrigation') !== 'none'; // "Sometimes" and "Fully" both count as irrigated
 const DEMO_CROPS = ['wheat', 'maize', 'sunflower'];
-const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '' };
+const state = { crops: DEMO_CROPS, power: null, base: null, loading: null, result: null, econ: {}, goals: [], costIds: '', blockSizes: {}, outline: null };
 const MAX_YEARS = 5;
 const DEMO_AREA = 120; // ha
 // The coming harvest year: from September on, autumn sowing is for next year's harvest. Block A grows
@@ -65,6 +67,17 @@ const map = L.map('map', { scrollWheelZoom: false }).setView([+$('lat').value, +
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 15, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 const marker = L.circleMarker(map.getCenter(), { radius: 9, weight: 3, fillOpacity: 1, className: 'field-marker' }).addTo(map);
 let overlay = null;
+const draw = drawTool(map, {
+  onArea: (ha) => {
+    if (!(ha > 0)) return;
+    $('area').value = Math.round(ha * 10) / 10;
+    $('draw-note').textContent = `Your field: ${Math.round(ha * 10) / 10} ha. Weather comes from NASA's grid for your area (about 50 km); the outline gives your farm size.`;
+    clearTimeout(drawTimer);
+    drawTimer = setTimeout(() => { state.outline = draw.points; renderOptions(); }, 400); // re-run the money once dragging pauses
+  },
+  onDone: (c, pts) => { state.outline = pts; setField(c.lat, c.lng); },
+});
+let drawTimer = null;
 
 function setOverlay() {
   const key = picked('layer'), def = LAYERS[key];
@@ -347,13 +360,20 @@ function card(c, i, cur, ctx, best) {
     </article>`;
 }
 
+// Block sizes for a rotation of n years: the farmer's own when they add up to the farm, else equal.
+const BLOCK_STEP = 5; // ha per stepper tap
+function blocksFor(n) {
+  const s = state.blockSizes?.[n], a = area();
+  return Array.isArray(s) && s.length === n && Math.abs(s.reduce((x, y) => x + y, 0) - a) < 0.05 ? s : equalBlocks(n, a);
+}
+
 // Current rotation plus alternatives, each with its replayed whole-farm money, in the farmer's goal order.
 // With no goal picked, the order is the model total from the advanced weights.
 function ranked(current, allowed, ctx, weights) {
   const { cur, alts } = suggest(current, allowed, ctx, weights);
   const econs = econsFor(state.econ), full = picked('irrigation') === 'full', ha = area();
   const all = [{ rot: current, ev: cur.ev, total: cur.total }, ...alts].map((o) => ({
-    ...o, money: moneySummary(farmYears(o.ev, econs, equalBlocks(o.rot.crops.length, ha), full, START_YEAR_PLAN)) }));
+    ...o, money: moneySummary(farmYears(o.ev, econs, blocksFor(o.rot.crops.length), full, START_YEAR_PLAN)) }));
   const options = state.goals.length ? sortByGoals(all, current, state.goals) : [...all].sort((a, b) => b.total - a.total);
   return { options, now: options.find((o) => !o.kind) };
 }
@@ -361,7 +381,7 @@ function ranked(current, allowed, ctx, weights) {
 function persist() {
   saveFarm({ lat: $('lat').value, lon: $('lon').value, soil: picked('soil'), slope: picked('slope'), irr: picked('irrigation'),
     crops: state.crops, cover: $('cover').checked, livestock: $('livestock').checked, area: $('area').value,
-    econ: state.econ, goals: state.goals, notes: $('notes').value });
+    econ: state.econ, goals: state.goals, notes: $('notes').value, outline: state.outline || null, blockSizes: state.blockSizes || {} });
   $('start-over-top').hidden = false;
 }
 
@@ -378,6 +398,12 @@ function applyFarm(f) {
   state.econ = sanitizeEcon(f.econ);
   state.goals = (Array.isArray(f.goals) ? f.goals : []).filter((g) => g in GOALS).slice(0, MAX_PICKS);
   if (typeof f.notes === 'string') $('notes').value = f.notes.slice(0, 5000);
+  const sizes = f.blockSizes && typeof f.blockSizes === 'object' ? f.blockSizes : {};
+  state.blockSizes = Object.fromEntries(Object.entries(sizes).filter(([n, s]) => Array.isArray(s) && s.length === +n && s.every((v) => typeof v === 'number' && v >= 0)));
+  if (Array.isArray(f.outline) && f.outline.length >= 3 && f.outline.length <= 200) {
+    state.outline = f.outline.filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng)).map((p) => ({ lat: p.lat, lng: p.lng }));
+    draw.load(state.outline); showDrawing(false);
+  }
   $('start-over-top').hidden = false;
 }
 
@@ -426,6 +452,8 @@ function renderOptions() {
     ? `Best match for ${goalText}: ${change(top).replace(/^./, (m) => m.toLowerCase())}.`
     : `For ${goalText}, none of the alternatives beats what you grow now.`;
   $('ranking').innerHTML = decisionTable(options, now, state.goals);
+  $('farm-strips').innerHTML = `<p class="hint">Your ${Math.round(area())} ha in ${START_YEAR_PLAN} with ${top.kind ? 'the best match' : 'what you grow now'}: one block per year of the rotation.</p>${farmStrips(top, blocksFor(top.rot.crops.length), START_YEAR_PLAN)}
+    <p><a class="card-plan" href="#plan" data-plan="0">See the plan, season by season →</a></p>`;
   $('cards').innerHTML = options.map((c, i) => card(c, i, now, ctx, c === top && c.kind)).join('');
   const ids = [...new Set(options.flatMap((o) => o.rot.crops))];
   if (ids.join() !== state.costIds) { $('costs').innerHTML = costsPanel(ids, state.econ); state.costIds = ids.join(); } // keep focus while typing
@@ -437,8 +465,11 @@ function renderOptions() {
 }
 
 // ---------- your plan ----------
-const planOpts = (c, ctx) => ({ blockHa: equalBlocks(c.rot.crops.length, area()), equal: true, startYear: START_YEAR_PLAN,
-  month0: today.getMonth(), shift: ctx.mo.shift, area: area() });
+const planOpts = (c, ctx) => {
+  const blockHa = blocksFor(c.rot.crops.length);
+  return { blockHa, equal: blockHa.every((v) => Math.abs(v - blockHa[0]) < 0.05), startYear: START_YEAR_PLAN,
+    month0: today.getMonth(), shift: ctx.mo.shift, area: area(), step: BLOCK_STEP };
+};
 
 // The option whose plan is open: a tapped row or card, the landing page's swap, else the best match.
 function planOption() {
@@ -529,7 +560,15 @@ document.querySelector('.presets').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (b) setField(b.dataset.lat, b.dataset.lon, 7);
 });
-map.on('click', (e) => { const p = e.latlng.wrap(); setField(p.lat, p.lng); });
+map.on('click', (e) => { if (draw.active) return; const p = e.latlng.wrap(); setField(p.lat, p.lng); });
+// Draw your field: the outline sets the farm size and moves the weather point to its middle.
+const showDrawing = (on) => { $('draw-start').hidden = on; $('draw-done').hidden = !on; $('draw-clear').hidden = !on && !draw.points.length; };
+$('draw-start').addEventListener('click', () => { draw.start(); showDrawing(true); $('draw-note').textContent = 'Tap each corner of your field on the map. Drag a corner to adjust. Then tap Done.'; });
+$('draw-done').addEventListener('click', () => {
+  if (!draw.finish()) { $('draw-note').textContent = 'Tap at least three corners on the map first.'; draw.start(); return; }
+  showDrawing(false);
+});
+$('draw-clear').addEventListener('click', () => { draw.clear(); state.outline = null; showDrawing(false); persist(); $('draw-note').textContent = 'Outline cleared. Type the size below, or draw again.'; });
 for (const id of ['lat', 'lon']) $(id).addEventListener('change', loadField);
 $('layers').addEventListener('change', setOverlay);
 $('hazard').addEventListener('change', renderRibbon);
@@ -586,13 +625,22 @@ for (const id of ['cover', 'livestock', 'allowed']) $(id).addEventListener('chan
 for (const name of ['soil', 'slope', 'irrigation']) for (const el of document.querySelectorAll(`input[name=${name}]`)) el.addEventListener('change', renderOptions);
 $('cards').addEventListener('click', (e) => { if (e.target.dataset.pick != null) $('pick').value = e.target.dataset.pick; });
 $('pick').addEventListener('change', renderReport);
-for (const id of ['ranking', 'cards']) {
+for (const id of ['ranking', 'cards', 'farm-strips']) {
   $(id).addEventListener('click', (e) => { // a row or card opens that option's plan
     const a = e.target.closest('[data-plan]');
     if (a) state.planIndex = +a.dataset.plan;
   });
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && stepId() === 'plan') location.hash = '#options'; });
+$('plan').addEventListener('click', (e) => { // block steppers: the farm total stays, money follows
+  const btn = e.target.closest('[data-block]');
+  if (!btn || !state.result) return;
+  const n = state.result.options[state.planIndex].rot.crops.length;
+  state.blockSizes = { ...state.blockSizes, [n]: moveHectares(blocksFor(n), +btn.dataset.block, +btn.dataset.ha) };
+  renderOptions();
+  document.querySelector(`[data-block="${btn.dataset.block}"][data-ha="${btn.dataset.ha}"]`)?.focus();
+});
+$('area').addEventListener('change', () => { state.blockSizes = {}; renderOptions(); }); // a new farm size starts from equal blocks
 $('plan-print').addEventListener('click', () => window.print());
 $('print').addEventListener('click', () => window.print());
 
