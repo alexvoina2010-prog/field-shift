@@ -66,6 +66,16 @@ test('drawn outline area: a 0.01° square at the equator is about 123.6 ha', asy
   assert.ok(Math.abs(ha - 123.6) < 1.5, `${ha}`); // (1113.2 m)² on the WGS84 sphere
 });
 
+test('climate flags on the demo field: soybean flagged with a counted reason, wheat not', async () => {
+  const C = await import('../src/model/climate.js'), { cropFlags } = await import('../src/model/flags.js');
+  const fs = await import('node:fs/promises');
+  const d = JSON.parse(await fs.readFile(new URL('../data/demo_field.json', import.meta.url), 'utf8'));
+  const mo = C.toMonthly(C.expandDemo(d), 44.56, undefined, d.elev);
+  const f = cropFlags({ mo, clim: C.summarize(mo).clim, soil: 'loam', slope: 'gentle' });
+  assert.match(f.soybean.reason, /too hot and too dry at flowering in \d+ of 26 summers/);
+  assert.equal(f.wheat, null);
+});
+
 test('picking "steadier income" ranks the option with the better bad year first', () => {
   const opt = (normal, bad, lossYears) => ({ rot: { crops: ['wheat'] }, total: 0.5,
     ev: { scores: { water: 0.5, nitrogen: 0, erosion: 0.5 }, facts: { bare: 3, n: 1 } }, money: { normal, bad, lossYears, n: 25 } });

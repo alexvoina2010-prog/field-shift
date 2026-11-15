@@ -14,6 +14,7 @@ import { decisionTable, change } from './table.js';
 import { planHtml, planText, farmStrips } from './plan-ui.js';
 import { drawTool } from './draw.js';
 import { moveHectares } from '../src/model/plan.js';
+import { cropFlags, FLAG_RULES } from '../src/model/flags.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -274,16 +275,44 @@ const GOAL_HINTS = {
 const UNPICKED = 1, MAX_PICKS = 2;
 const IRRIGATION = { none: 'No irrigation', some: 'Sometimes', full: 'Fully irrigated' };
 
+// Climate flags for this field, recomputed only when the field, soil or irrigation changes.
+function flagsFor() {
+  if (!state.base) return {};
+  const key = `${state.power.lat},${state.power.lon},${picked('soil')},${irrigated()}`;
+  if (state.flagKey !== key) {
+    state.flags = cropFlags({ mo: state.base, clim: summarize(state.base).clim, soil: picked('soil'), slope: picked('slope') }, irrigated());
+    state.flagKey = key;
+    renderFlags();
+  }
+  return state.flags;
+}
+
+// Flagged crops stay selectable: greyed, with the computed reason.
+function renderFlags() {
+  const f = state.flags || {};
+  for (const label of document.querySelectorAll('#allowed label')) {
+    const id = label.querySelector('input').value, flag = f[id];
+    label.classList.toggle('flagged', Boolean(flag));
+    label.querySelector('.flag')?.remove();
+    if (flag) label.insertAdjacentHTML('beforeend', `<span class="flag">Rarely suits your area: ${esc(flag.reason)}</span>`);
+  }
+  renderRotation();
+}
+
 function renderRotation() {
-  const options = (sel) => Object.entries(CROPS).map(([id, c]) => `<option value="${id}"${id === sel ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  const f = state.flags || {};
+  const options = (sel) => Object.entries(CROPS).map(([id, c]) => `<option value="${id}"${id === sel ? ' selected' : ''}>${esc(c.name)}${f[id] ? ' (rarely suits your area)' : ''}</option>`).join('');
   $('rotation').innerHTML = state.crops.map((id, i) => `<div class="year-row"><span>Year ${i + 1}</span>
     <select data-year="${i}" aria-label="Crop in year ${i + 1}">${options(id)}</select>
     <button type="button" data-remove="${i}" aria-label="Remove year ${i + 1}"${state.crops.length === 1 ? ' disabled' : ''}>✕</button></div>`).join('');
   $('add-year').disabled = state.crops.length >= MAX_YEARS;
+  const flagged = state.crops.filter((id) => f[id]);
+  $('rotation-flags').textContent = flagged.map((id) => `${CROPS[id].name} rarely suits your area: ${f[id].reason}.`).join(' ');
 }
 
 function buildControls() {
   $('allowed').innerHTML = Object.entries(CROPS).map(([id, c]) => `<label><input type="checkbox" value="${id}" checked> ${esc(c.name)}</label>`).join('');
+  $('flag-rules').textContent = `A crop is flagged "rarely suits your area" when, replayed on its own on this field, it had ${Object.values(FLAG_RULES).map((r) => r.text).join('; or ')}. Heat alone is not flagged on a rain-fed field: the heat limits are assumptions. Flagged crops stay selectable.`;
   $('prio').insertAdjacentHTML('beforeend', Object.entries(GOALS).map(([k, t]) => `<label><input type="checkbox" name="goal" value="${k}"${state.goals.includes(k) ? ' checked' : ''}>
     <span>${esc(t)}<span class="src">${esc(GOAL_HINTS[k])}</span></span></label>`).join(''));
   $('weights').innerHTML = METRICS.map((k) => `<label>${esc(LABELS[k])} <output id="wo-${k}"></output>
@@ -437,6 +466,7 @@ function renderOptions() {
   const weights = Object.fromEntries(METRICS.map((k) => [k, k === 'water' && wet ? 0 : +$(`w-${k}`).value]));
   const weightSum = METRICS.reduce((s, k) => s + weights[k], 0);
   for (const k of METRICS) $(`wo-${k}`).textContent = k === 'water' && wet ? 'not counted (irrigated)' : weightSum ? `${Math.round((100 * weights[k]) / weightSum)}% of the score` : '0%';
+  flagsFor();
   const allowed = [...document.querySelectorAll('#allowed input:checked')].map((i) => i.value)
     .filter((id) => id in CROPS && ($('livestock').checked || !CROPS[id].forage));
   const { options, now } = ranked(current, allowed, ctx, weights), top = options[0];

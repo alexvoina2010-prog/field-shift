@@ -111,6 +111,11 @@ legend { padding: 0; margin-bottom: var(--space-xs); font-size: var(--text-md); 
 .chips-pick label { display: inline-flex; align-items: center; gap: var(--space-xs); min-height: 44px; margin: 0; padding: 0 var(--space-sm); font-weight: 600; background: var(--color-sheet); border: var(--rule-hair) solid var(--color-ink); border-radius: var(--radius-pill); cursor: pointer; }
 .chips-pick label:not(:has(:checked)) { background: transparent; border-color: var(--color-muted); border-style: dashed; color: var(--color-muted); text-decoration: line-through; }
 .echo { margin-top: var(--space-lg); }
+.chips-pick label.flagged { border-style: dotted; color: var(--color-muted); background: var(--color-paper-2); flex-wrap: wrap; padding-block: var(--space-2xs); }
+.chips-pick label .flag { flex-basis: 100%; font-size: var(--text-xs); font-weight: 400; color: var(--color-ink-2); }
+.chips-pick label.flagged::before { content: "⚠"; color: var(--color-accent-2); }
+.flag-note:empty { display: none; }
+.flag-note { color: var(--color-accent-2); font-weight: 600; }
 
 /* ---------- field and map ---------- */
 #locate { margin-bottom: var(--space-xs); }
